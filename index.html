@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pass the Set</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#07080d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pass the Set">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/icon-192.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=DM+Sans:wght@500;700&display=swap">
 <style>
 :root{
@@ -14,6 +22,7 @@
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{overscroll-behavior:none}
 body{margin:0;height:100%;background:var(--ink);color:var(--text);font:500 15px/1.3 "DM Sans",system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 #app{position:relative;height:100%;width:100%;overflow:hidden;
   background:radial-gradient(70% 60% at 50% 0%,rgba(224,169,59,.16),transparent 70%),var(--ink)}
@@ -112,9 +121,16 @@ input.txt:focus{border-color:var(--brass)}
 .pts{color:var(--brass);font-weight:700}
 .show{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
 .show .card{--cw:44px}
+#splash{position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;
+  background:radial-gradient(60% 55% at 50% 30%,rgba(224,169,59,.30),transparent 70%),#07080d;transition:opacity .45s;cursor:pointer;padding:20px}
+#splash.out{opacity:0;pointer-events:none}
+#splash img{width:min(46vmin,260px);height:auto;border-radius:22%;box-shadow:0 12px 40px rgba(0,0,0,.7),0 0 60px rgba(224,169,59,.25)}
+#splash p{margin:0;color:var(--mute);animation:pl2 1.4s ease-in-out infinite}
+@keyframes pl2{50%{opacity:.35}}
 </style>
 </head>
 <body>
+<div id="splash"><img src="/icon-512.png" alt="" onerror="this.style.display='none'"><h1>Pass the Set</h1><p>Tap to play</p></div>
 <div id="app">
 
   <!-- LOBBY -->
@@ -247,6 +263,7 @@ input.txt:focus{border-color:var(--brass)}
     <h3>Game menu</h3>
     <button class="btn wide" id="mResume">Resume</button>
     <button class="btn wide" id="mSound">Sound: on</button>
+    <button class="btn wide" id="mFull">Fullscreen</button>
     <button class="btn wide" id="mCustom">Custom</button>
     <button class="btn wide" id="mQuit" style="color:#ff8a98">Quit</button>
   </div></div>
@@ -977,6 +994,19 @@ function frame(t){
   else if(screenId==='char')drawPreview('cvChar',t);
   else if(screenId==='game'&&G)drawScene(t);
 }
+/* ---- app feel: fullscreen, orientation, install, splash ---- */
+function isFull(){return !!(document.fullscreenElement||document.webkitFullscreenElement)||matchMedia('(display-mode: fullscreen)').matches||matchMedia('(display-mode: standalone)').matches}
+function goFull(){
+  try{
+    const el=document.documentElement,rq=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(rq&&!isFull()){const r=rq.call(el);const lock=()=>{try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}};
+      if(r&&r.then)r.then(lock).catch(()=>{});else lock()}
+  }catch(e){}
+}
+function leaveFull(){try{(document.exitFullscreen||document.webkitExitFullscreen).call(document)}catch(e){}}
+$('#mFull').onclick=()=>{if(document.fullscreenElement||document.webkitFullscreenElement)leaveFull();else goFull()};
+$('#splash').onclick=()=>{ac();goFull();$('#splash').classList.add('out');setTimeout(()=>$('#splash').remove(),500)};
+try{if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('/sw.js').catch(()=>{})}catch(e){}
 refreshNames();show('lobby');probe();requestAnimationFrame(frame);
 })();
 </script>
