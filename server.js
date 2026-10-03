@@ -20,6 +20,7 @@ const MAX_MSG = 64 * 1024;
 const CODE_RE = /^[\x21-\x7E]{6}$/;
 
 const rooms = new Map();   // code -> room
+const hashPw = (salt, pw) => crypto.createHash('sha256').update(salt + '|' + pw).digest('hex');
 let nextId = 1;
 
 /* ---------------- minimal WebSocket framing ---------------- */
@@ -110,8 +111,10 @@ function handle(c, m) {
       const room = {
         code, rid: crypto.randomBytes(4).toString('hex'), net: m.net === 'local' ? 'local' : 'online',
         host: c, members: new Map(), open: true,
-        mode: clampInt(m.mode, 4, 8, 4), deck: str(m.deck, 10), hostName: str(m.name, 12) || 'Host', count: 1
+        mode: clampInt(m.mode, 4, 8, 4), deck: str(m.deck, 10), hostName: str(m.name, 12) || 'Host', count: 1, salt: crypto.randomBytes(8).toString('hex'), pw: null
       };
+      const pw = str(m.password, 24);
+      if (pw) room.pw = hashPw(room.salt, pw);
       rooms.set(code, room);
       c.room = room; c.isHost = true;
       c.send({ t: 'hosted', id: c.id, code });
@@ -132,7 +135,7 @@ function handle(c, m) {
       const out = [];
       for (const r of rooms.values()) {
         if (r.open && r.count < r.mode) {
-          out.push({ rid: r.rid, hostName: r.hostName, mode: r.mode, deck: r.deck, count: r.count });
+          out.push({ rid: r.rid, hostName: r.hostName, mode: r.mode, deck: r.deck, count: r.count, locked: !!r.pw });
         }
       }
       c.send({ t: 'rooms', rooms: out.slice(0, 30) });
@@ -145,6 +148,11 @@ function handle(c, m) {
       else if (m.rid != null) for (const x of rooms.values()) if (x.rid === m.rid) r = x;
       if (!r || !r.open) return c.send({ t: 'error', msg: 'not-found' });
       if (r.members.size + 1 >= r.mode) return c.send({ t: 'error', msg: 'full' });
+      if (r.pw && hashPw(r.salt, str(m.password, 24)) !== r.pw) {
+        c.fails = (c.fails || 0) + 1;
+        if (c.fails > 10) return c.destroy();
+        return c.send({ t: 'error', msg: 'wrong-password' });
+      }
       c.room = r; c.isHost = false; r.members.set(c.id, c);
       c.send({ t: 'joined', id: c.id });
       r.host.send({ t: 'peer', id: c.id, joined: true, name: str(m.name, 12) || 'Player', prof: m.prof });
@@ -153,11 +161,13 @@ function handle(c, m) {
     case 'msg': {
       const r = c.room; if (!r) return;
       if (c.isHost) {
-        const pkt = { t: 'msg', data: m.data };
+        const pkt = { t: 'msg', from: c.id, data: m.data };
         if (m.to == null) { for (const x of r.members.values()) x.send(pkt); }
         else { const x = r.members.get(m.to); if (x) x.send(pkt); }
       } else {
-        r.host.send({ t: 'msg', from: c.id, data: m.data });
+        const pkt = { t: 'msg', from: c.id, data: m.data };
+        if (m.to == null || m.to === r.host.id) r.host.send(pkt);
+        else { const x = r.members.get(m.to); if (x) x.send(pkt); }   // player to player (voice chat setup)
       }
       break;
     }
@@ -196,6 +206,13 @@ const FILES = {
 /* ---------------- HTTP ---------------- */
 const server = http.createServer((req, res) => {
   if (req.url === '/health') { res.writeHead(200); return res.end('ok'); }
+  if (String(req.url).split('?')[0] === '/ice') {
+    const ice = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }];
+    // optional TURN relay for strict mobile networks: set TURN_URL (comma separated), TURN_USER, TURN_PASS on your host
+    if (process.env.TURN_URL) ice.push({ urls: process.env.TURN_URL.split(','), username: process.env.TURN_USER || '', credential: process.env.TURN_PASS || '' });
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    return res.end(JSON.stringify(ice));
+  }
   const f = FILES[String(req.url).split('?')[0]];
   if (f) { res.writeHead(200, { 'Content-Type': f[0], 'Cache-Control': 'no-cache' }); return res.end(f[1]); }
   fs.readFile(INDEX, (err, data) => {

@@ -102,6 +102,15 @@ input.txt:focus{border-color:var(--brass)}
 .hb.hide{display:none}
 #hud.edit .hb{outline:2px dashed var(--brass);outline-offset:3px}
 #hud.edit .hb.pick{outline-color:#fff}
+#voiceMenu{display:none}
+#voiceMenu.on{display:flex}
+.pop{position:absolute;right:10px;top:86px;z-index:46;min-width:210px;max-width:84vw;max-height:70%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;flex-direction:column;gap:6px}
+.pop.on{display:flex}
+.poph{margin:2px 6px;color:var(--mute);font-size:12px}
+.popi{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px 12px;text-align:left;font:700 14px "DM Sans",sans-serif;cursor:pointer}
+.popi.on{border-color:var(--brass);color:var(--brass)}
+.hb.rec{border-color:#e8485f;box-shadow:0 0 0 3px rgba(232,72,95,.35)}
+.hb.muted{border-color:var(--mute);color:var(--mute)}
 #editBar{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:45;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;display:none;gap:10px;align-items:center;width:min(94%,460px)}
 #editBar.on{display:flex}
 #editBar input{flex:1}
@@ -172,6 +181,7 @@ input.txt:focus{border-color:var(--brass)}
       <div class="menu col">
         <div id="codeBox" style="display:none"><p class="lbl" style="margin-top:0">Room code</p><div class="code" id="codeText"></div></div>
         <button class="btn" id="hostSettings">SETTINGS</button>
+        <button class="btn" id="hostPw" style="display:none">PASSWORD: NONE</button>
         <button class="btn pri" id="hostStart">START</button>
         <p class="note" id="hostMsg"></p>
       </div>
@@ -196,6 +206,7 @@ input.txt:focus{border-color:var(--brass)}
     <div class="center">
       <h2>Enter room code</h2>
       <input class="txt" id="codeInput" maxlength="6" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="6 characters">
+      <input class="txt" id="codePw" maxlength="24" autocomplete="off" placeholder="Password (only if the room has one)" style="font-size:15px">
       <p class="note" id="codeMsg">Codes are 6 characters: upper and lower case letters, numbers and symbols.</p>
       <button class="btn pri" id="codeGo">JOIN</button>
     </div>
@@ -234,10 +245,13 @@ input.txt:focus{border-color:var(--brass)}
     <div id="toast"></div>
     <div id="feed"></div>
     <div id="chatPanel"><div id="chatLog"></div><div id="chatRow"><input id="chatIn" maxlength="80" placeholder="Say something"><button class="btn sm" id="chatSend">Send</button></div></div>
+    <div id="voiceMenu" class="pop"></div>
     <div id="hand"></div>
     <div id="hud">
       <button class="hb" id="bGear" data-id="gear">⚙</button>
       <button class="hb" id="bChat" data-id="chat">💬</button>
+      <button class="hb" id="bMic" data-id="mic">🎤</button>
+      <button class="hb" id="bSpk" data-id="spk">🔊</button>
       <button class="hb" id="bLook" data-id="look">👁 Look</button>
       <button class="hb pass" id="bPass" data-id="pass">Pass ➜</button>
       <button class="hb set hide" id="bSet" data-id="set">SET!</button>
@@ -248,6 +262,22 @@ input.txt:focus{border-color:var(--brass)}
 
   <canvas id="confetti" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:70"></canvas>
   <!-- MODALS -->
+  <div id="pwSet" class="modal"><div class="sheet">
+    <h3>Room password</h3>
+    <p class="note" style="margin:0">Players must type this to join your room. Leave it empty for an open room.</p>
+    <input class="txt" id="pwInput" maxlength="24" autocomplete="off" placeholder="Password" style="width:100%">
+    <button class="btn pri wide" id="pwSave">Save</button>
+    <button class="btn wide" id="pwClear">Remove password</button>
+  </div></div>
+
+  <div id="pwJoin" class="modal"><div class="sheet">
+    <h3>Enter password</h3>
+    <p class="note" style="margin:0">This room is locked 🔒</p>
+    <input class="txt" id="pwJoinInput" type="password" maxlength="24" autocomplete="off" placeholder="Password" style="width:100%">
+    <button class="btn pri wide" id="pwJoinGo">Join</button>
+    <button class="btn wide" id="pwJoinCancel">Cancel</button>
+  </div></div>
+
   <div id="cfgModal" class="modal"><div class="sheet">
     <h3>Room settings</h3>
     <p class="lbl" style="margin-top:4px">Mode (players)</p>
@@ -313,7 +343,7 @@ const CHAT=['hmm 👀','nice one','ok ok','who has the lion?','careful...','my h
 let profile=store.get('profile',{name:'Player',skin:0,hair:0,hairCol:0,shirt:0,shirtCol:0,acc:0});
 let cfg=store.get('cfg',{mode:4,deck:'CARDS'});
 let layout=store.get('layout',{});
-const DEF={gear:{x:.07,y:.08,s:1},chat:{x:.93,y:.08,s:1},look:{x:.9,y:.4,s:1},pass:{x:.9,y:.55,s:1},set:{x:.9,y:.72,s:1},shuffle:{x:.9,y:.88,s:1}};
+const DEF={gear:{x:.07,y:.08,s:1},chat:{x:.93,y:.08,s:1},look:{x:.9,y:.4,s:1},pass:{x:.9,y:.55,s:1},set:{x:.9,y:.72,s:1},shuffle:{x:.9,y:.88,s:1},mic:{x:.85,y:.08,s:1},spk:{x:.77,y:.08,s:1}};
 let ME=0,NETMODE=null,LOBBY={n:0,deck:'',names:[],peers:[]};
 let net='local',role='host',screenId='lobby',G=null,editing=false,editSel='look',genCounter=0,waitTimer=null,searchTimer=null;
 
@@ -434,7 +464,7 @@ $('#goOnline').onclick=()=>{net='online';$('#modeTitle').textContent='Play onlin
 $('#goChar').onclick=()=>{buildChar();show('char')};
 
 $('#bHost').onclick=()=>{role='host';$('#hostTitle').textContent=net==='local'?'Host local game':'Host online game';
-  $('#codeBox').style.display=net==='online'?'block':'none';HOSTCODE=genCode();$('#codeText').textContent=HOSTCODE;$('#hostMsg').textContent='';refreshHost();show('host')};
+  $('#codeBox').style.display=net==='online'?'block':'none';HOSTCODE=genCode();$('#codeText').textContent=HOSTCODE;$('#hostMsg').textContent='';HOSTPW='';$('#hostPw').style.display=net==='online'?'':'none';refreshPwBtn();refreshHost();show('host')};
 $('#bJoin').onclick=()=>{role='join';if(net==='local')startSearch('Searching your Wi-Fi or hotspot…');else{$('#codeInput').value='';$('#codeMsg').textContent='Codes are 6 characters: upper and lower case letters, numbers and symbols.';show('code')}};
 $('#bFind').onclick=()=>{role='join';startSearch('Searching online servers…')};
 
@@ -455,11 +485,20 @@ $('#searchPractice').onclick=()=>openWait({mode:cfg.mode,deck:cfg.deck},false);
 $('#codeGo').onclick=()=>{const v=$('#codeInput').value;
   if(v.length!==6){$('#codeMsg').textContent='Enter all 6 characters.';return}
   $('#codeMsg').textContent='Connecting…';
-  netConnect().then(()=>joinRoom({code:v})).catch(()=>{
+  netConnect().then(()=>joinRoom({code:v,password:$('#codePw').value})).catch(()=>{
     $('#codeMsg').textContent='No game server reachable from this page, opening a practice room with bots instead.';
     setTimeout(()=>openWait({mode:cfg.mode,deck:cfg.deck},false),1000)});
 };
 
+function refreshPwBtn(){$('#hostPw').textContent=HOSTPW?'🔒 PASSWORD: SET':'PASSWORD: NONE'}
+$('#hostPw').onclick=()=>{$('#pwInput').value=HOSTPW;$('#pwSet').classList.add('on')};
+$('#pwSave').onclick=()=>{HOSTPW=$('#pwInput').value.slice(0,24);$('#pwSet').classList.remove('on');refreshPwBtn()};
+$('#pwClear').onclick=()=>{HOSTPW='';$('#pwSet').classList.remove('on');refreshPwBtn()};
+$('#pwSet').onclick=e=>{if(e.target.id==='pwSet')$('#pwSet').classList.remove('on')};
+$('#pwJoinGo').onclick=()=>{$('#pwJoin').classList.remove('on');joinRoom({rid:PWTARGET,password:$('#pwJoinInput').value})};
+$('#pwJoinCancel').onclick=()=>$('#pwJoin').classList.remove('on');
+$('#pwJoin').onclick=e=>{if(e.target.id==='pwJoin')$('#pwJoin').classList.remove('on')};
+$('#pwJoinInput').onkeydown=e=>{if(e.key==='Enter')$('#pwJoinGo').click()};
 function refreshHost(){
   $('#hostSummary').textContent=`${cfg.mode} players · ${setsFor(cfg.mode)} sets of four · deck ${cfg.deck}`;
   $('#hostPrev').innerHTML=DECKS[cfg.deck].slice(0,setsFor(cfg.mode)).map(s=>`<span>${s}</span>`).join('');
@@ -467,7 +506,7 @@ function refreshHost(){
 $('#hostSettings').onclick=()=>openCfg();
 $('#hostStart').onclick=()=>{
   $('#hostMsg').textContent='';
-  netConnect().then(()=>{NETMODE='host';netSend({t:'host',code:HOSTCODE,net,name:profile.name,mode:cfg.mode,deck:cfg.deck})})
+  netConnect().then(()=>{NETMODE='host';netSend({t:'host',code:HOSTCODE,net,name:profile.name,mode:cfg.mode,deck:cfg.deck,password:net==='online'?HOSTPW:''})})
   .catch(()=>{NETMODE=null;$('#hostMsg').textContent='No game server reachable from this page, starting a practice room with bots.';
     setTimeout(()=>openWait({mode:cfg.mode,deck:cfg.deck},true),1200)});
 };
@@ -679,12 +718,13 @@ function quit(){stopConfetti();leaveNet();G=null;genCounter++;['#overModal','#re
 function snap(fi){
   return {n:G.n,deck:G.deck,types:G.types,lap:G.lap,order:G.order,pos:G.pos,phase:G.phase,setOrder:G.setOrder,
     fly:G.fly.map(f=>({from:f.from,to:f.to,dur:f.dur})),
-    players:G.players.map(p=>({i:p.i,name:p.name,prof:p.prof,hearts:p.hearts,points:p.points,alive:p.alive,looking:p.looking,same:p.same||0,
+    players:G.players.map(p=>({i:p.i,cid:p.human?NET.id:(p.remote||null),name:p.name,prof:p.prof,hearts:p.hearts,points:p.points,alive:p.alive,looking:p.looking,same:p.same||0,
       nc:p.i===fi?p.newCard:null,hand:p.i===fi?p.hand:p.hand.map(()=>-1)}))};
 }
 function sync(){
   if(NETMODE!=='host'||!G)return;
   G.players.forEach(p=>{if(p.remote)toPeer(p.remote,{k:'state',s:snap(p.i)})});
+  voiceSync();
 }
 function applyState(s){
   const prev=G,me=s.players[ME];
@@ -697,12 +737,12 @@ function applyState(s){
   if(screenId!=='game'){show('game');applyLayout()}
   if(s.phase!=='result')$('#resModal').classList.remove('on');
   if(turnNow&&!wasTurn){SFX.turn();toast(s.lap>=1&&hasFour(me.hand)?'Four of a kind! Press SET':'Your turn. Pick a card and press Pass',2200)}
-  refreshUI();
+  refreshUI();voiceSync();
 }
 
 /* ================= NETWORK ================= */
 const NET={ws:null,id:null};
-let HOSTCODE='';
+let HOSTCODE='',HOSTPW='',PWTARGET=null;
 function netConnect(){
   return new Promise((res,rej)=>{
     if(NET.ws&&NET.ws.readyState===1)return res();
@@ -719,7 +759,7 @@ const netSend=o=>{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify(o)
 const toPeer=(id,data)=>netSend({t:'msg',to:id,data});
 const toAll=data=>netSend({t:'msg',to:null,data});
 const toHost=data=>netSend({t:'msg',data});
-function leaveNet(){const w=NET.ws;NET.ws=null;NETMODE=null;LOBBY.peers=[];if(w){try{w.close()}catch(e){}}}
+function leaveNet(){voiceStop();const w=NET.ws;NET.ws=null;NETMODE=null;LOBBY.peers=[];if(w){try{w.close()}catch(e){}}}
 function setStatus(ok){const e=$('#netStatus');if(!e)return;e.textContent=ok===null?'Checking server…':ok?'🟢 Server connected: friends can join':'⚪ No server found: bots only. Open this page from your server address.';e.style.color=ok?'#4cc38a':'#9097ab'}
 function probe(){setStatus(null);netConnect().then(()=>setStatus(true)).catch(()=>setStatus(false))}
 function onNetClose(){
@@ -730,18 +770,22 @@ function onNetClose(){
 }
 function onNet(m){
   switch(m.t){
-    case 'hosted':NET.id=m.id;enterHostLobby();break;
-    case 'joined':NET.id=m.id;NETMODE='client';enterClientLobby();break;
+    case 'hosted':NET.id=m.id;voiceLoadIce();enterHostLobby();break;
+    case 'joined':NET.id=m.id;voiceLoadIce();NETMODE='client';enterClientLobby();break;
     case 'rooms':showRooms(m.rooms||[]);break;
     case 'error':netError(m.msg);break;
     case 'closed':hostGone();break;
     case 'peer':if(NETMODE==='host')onPeer(m);break;
-    case 'msg':if(NETMODE==='host')onPeerMsg(m.from,m.data);else if(NETMODE==='client')onHostMsg(m.data);break;
+    case 'msg':{const d=m.data;if(d&&d.v==='rtc'){voiceSignal(m.from,d);break}
+      if(NETMODE==='host')onPeerMsg(m.from,d);else if(NETMODE==='client')onHostMsg(d);break}
   }
 }
 function netError(msg){
   if(msg==='code-taken'){HOSTCODE=genCode();$('#codeText').textContent=HOSTCODE;$('#hostStart').click();return}
-  const t={'not-found':'Room not found, or the game already started.','full':'That room is full.'}[msg]||'Something went wrong.';
+  if(msg==='wrong-password'&&screenId==='search'){
+    $('#searchMsg').textContent='Wrong password. Refreshing the list…';$('#searchSpin').style.display='';$('#searchList').innerHTML='';
+    setTimeout(()=>netSend({t:'list',net}),700);return}
+  const t={'not-found':'Room not found, or the game already started.','full':'That room is full.','wrong-password':'Wrong password.'}[msg]||'Something went wrong.';
   if(screenId==='code')$('#codeMsg').textContent=t;else if(screenId==='search')$('#searchMsg').textContent=t;else $('#hostMsg').textContent=t;
 }
 function hostGone(){
@@ -753,7 +797,8 @@ function showRooms(list){
   $('#searchSpin').style.display='none';
   $('#searchMsg').textContent=list.length?'Tap a room to join.':'No open rooms found. The host must tap START and be on the waiting screen. Then tap Refresh.';
   const box=$('#searchList');box.innerHTML='';
-  list.forEach(r=>{const b=document.createElement('button');b.className='btn';b.textContent=`${r.hostName} · ${r.count}/${r.mode} · ${r.deck}`;b.onclick=()=>joinRoom({rid:r.rid});box.append(b)});
+  list.forEach(r=>{const b=document.createElement('button');b.className='btn';b.textContent=`${r.locked?'🔒 ':''}${r.hostName} · ${r.count}/${r.mode} · ${r.deck}`;
+    b.onclick=()=>{if(r.locked){PWTARGET=r.rid;$('#pwJoinInput').value='';$('#pwJoin').classList.add('on');setTimeout(()=>$('#pwJoinInput').focus(),50)}else joinRoom({rid:r.rid})};box.append(b)});
   const rf=document.createElement('button');rf.className='btn sm';rf.textContent='Refresh';rf.onclick=()=>netSend({t:'list',net});box.append(rf);
 }
 function joinRoom(target){netSend({t:'join',...target,name:profile.name,prof:profile})}
@@ -769,7 +814,7 @@ function enterHostLobby(){
   clearTimers();show('wait');$('#waitTitle').textContent='Room open';
   const wc=$('#waitCode');wc.style.display=net==='online'?'block':'none';wc.textContent=HOSTCODE;
   $('#waitStart').style.display='';
-  $('#waitNote').textContent='Waiting for friends. They open the same address, tap JOIN and pick your room'+(net==='online'?' (or type the code)':'')+'. Tap START NOW when everyone is in; empty seats become bots.';
+  $('#waitNote').textContent=(HOSTPW&&net==='online'?'🔒 Password protected. ':'')+'Waiting for friends. They open the same address, tap JOIN and pick your room'+(net==='online'?' (or type the code)':'')+'. Tap START NOW when everyone is in; empty seats become bots.';
   netSend({t:'update',count:1});drawLobby();
 }
 function enterClientLobby(){
@@ -842,6 +887,125 @@ function peerLeft(id){
   refreshUI();
 }
 
+/* ================= VOICE CHAT (WebRTC, signaling through the room server) ================= */
+const VOICE={pcs:new Map(),audios:new Map(),pend:new Map(),stream:null,track:null,target:'off',muted:new Set(),allMuted:false,ice:null};
+try{window.__voice=VOICE}catch(e){}
+const STUN=[{urls:'stun:stun.l.google.com:19302'}];
+const cidOf=p=>p.cid!==undefined?p.cid:(p.human?NET.id:(p.remote||null));
+function voiceLoadIce(){fetch('/ice').then(r=>r.json()).then(j=>{VOICE.ice=j}).catch(()=>{VOICE.ice=STUN})}
+function voicePeer(id){
+  if(VOICE.pcs.has(id))return VOICE.pcs.get(id);
+  if(typeof RTCPeerConnection==='undefined')return null;
+  const pc=new RTCPeerConnection({iceServers:VOICE.ice||STUN});
+  // only the side that sends the offer creates the audio line; the other side adopts the one from the offer
+  const tr=NET.id<id?pc.addTransceiver('audio',{direction:'sendrecv'}):null;
+  const o={pc,tr};VOICE.pcs.set(id,o);VOICE.pend.set(id,[]);
+  pc.onicecandidate=e=>{if(e.candidate)netSend({t:'msg',to:id,data:{v:'rtc',k:'ice',c:e.candidate}})};
+  pc.ontrack=e=>{
+    let a=VOICE.audios.get(id);if(!a){a=new Audio();a.autoplay=true;VOICE.audios.set(id,a)}
+    a.srcObject=e.streams[0]||new MediaStream([e.track]);a.muted=VOICE.allMuted||VOICE.muted.has(id);a.play().catch(()=>{});
+  };
+  voiceRoute();
+  if(NET.id<id)voiceOffer(id,o);
+  return o;
+}
+async function voiceOffer(id,o){
+  try{const off=await o.pc.createOffer();await o.pc.setLocalDescription(off);
+    netSend({t:'msg',to:id,data:{v:'rtc',k:'offer',s:o.pc.localDescription}})}catch(e){}
+}
+async function voiceSignal(from,d){
+  if(from==null||NET.id==null)return;
+  const o=voicePeer(from);if(!o)return;
+  const pc=o.pc;
+  try{
+    if(d.k==='offer'){
+      await pc.setRemoteDescription(d.s);
+      const t=pc.getTransceivers().find(x=>x.mid!=null&&x.kind==='audio'||x.receiver&&x.receiver.track&&x.receiver.track.kind==='audio');
+      if(t){t.direction='sendrecv';o.tr=t}
+      const ans=await pc.createAnswer();await pc.setLocalDescription(ans);voiceRoute();
+      netSend({t:'msg',to:from,data:{v:'rtc',k:'answer',s:pc.localDescription}});
+      (VOICE.pend.get(from)||[]).splice(0).forEach(c=>pc.addIceCandidate(c).catch(()=>{}));
+    }else if(d.k==='answer'){
+      await pc.setRemoteDescription(d.s);
+      (VOICE.pend.get(from)||[]).splice(0).forEach(c=>pc.addIceCandidate(c).catch(()=>{}));
+    }else if(d.k==='ice'&&d.c){
+      if(pc.remoteDescription)pc.addIceCandidate(d.c).catch(()=>{});else VOICE.pend.get(from).push(d.c);
+    }
+  }catch(e){}
+}
+function voiceDrop(id){
+  const o=VOICE.pcs.get(id);if(o){try{o.pc.close()}catch(e){}}
+  VOICE.pcs.delete(id);VOICE.pend.delete(id);
+  const a=VOICE.audios.get(id);if(a){try{a.srcObject=null}catch(e){}}VOICE.audios.delete(id);
+}
+function voiceSync(){
+  if(!NETMODE||!G||NET.id==null)return;
+  const ids=G.players.map(cidOf).filter(x=>x!=null&&x!==NET.id);
+  ids.forEach(id=>voicePeer(id));
+  [...VOICE.pcs.keys()].forEach(id=>{if(!ids.includes(id))voiceDrop(id)});
+}
+function voiceStop(){
+  micStop();[...VOICE.pcs.keys()].forEach(voiceDrop);VOICE.muted.clear();VOICE.allMuted=false;
+  $('#voiceMenu').classList.remove('on');updateVoiceBtns();
+}
+function voiceRoute(){
+  VOICE.pcs.forEach((o,id)=>{
+    const on=VOICE.track&&(VOICE.target==='all'||VOICE.target===id);
+    try{if(o.tr)o.tr.sender.replaceTrack(on?VOICE.track:null).catch(()=>{})}catch(e){}
+  });
+}
+async function micSet(target){
+  if(target==='off'){micStop();return}
+  if(!VOICE.stream){
+    try{
+      VOICE.stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+      VOICE.track=VOICE.stream.getAudioTracks()[0];
+    }catch(e){
+      toast(window.isSecureContext?'Microphone blocked. Allow it in your browser settings.':'The mic needs a secure (https) address.',3200);return;
+    }
+  }
+  VOICE.target=target;voiceRoute();updateVoiceBtns();
+}
+function micStop(){
+  if(VOICE.stream)VOICE.stream.getTracks().forEach(t=>t.stop());
+  VOICE.stream=null;VOICE.track=null;VOICE.target='off';voiceRoute();updateVoiceBtns();
+}
+function voiceMuted(id){return VOICE.allMuted||VOICE.muted.has(id)}
+function applyMute(){VOICE.audios.forEach((a,id)=>{a.muted=voiceMuted(id)});updateVoiceBtns()}
+function updateVoiceBtns(){
+  const m=$('#bMic'),s=$('#bSpk');if(!m||!s)return;
+  m.classList.toggle('rec',!!VOICE.track);m.textContent=VOICE.track?'🎤':'🎤';m.style.opacity=VOICE.track?'1':'.85';
+  s.textContent=VOICE.allMuted?'🔇':'🔊';s.classList.toggle('muted',VOICE.allMuted||VOICE.muted.size>0);
+}
+function voiceNames(){
+  if(!G)return [];
+  return G.players.map(p=>({cid:cidOf(p),name:p.name})).filter(x=>x.cid!=null&&x.cid!==NET.id);
+}
+function openVoiceMenu(kind){
+  const menu=$('#voiceMenu');
+  if(menu.classList.contains('on')&&menu.dataset.kind===kind){menu.classList.remove('on');return}
+  if(!NETMODE){toast('Voice chat works in online rooms with friends',2400);return}
+  const names=voiceNames();let h='';
+  if(kind==='mic'){
+    h+=`<p class="poph">Talk to</p>`;
+    h+=`<button class="popi ${VOICE.target==='all'?'on':''}" data-t="all">🎤 All</button>`;
+    names.forEach(n=>{h+=`<button class="popi ${VOICE.target===n.cid?'on':''}" data-t="${n.cid}">🎤 ${esc(n.name)}</button>`});
+    h+=`<button class="popi ${VOICE.target==='off'?'on':''}" data-t="off">Off</button>`;
+  }else{
+    h+=`<p class="poph">Hear players</p>`;
+    h+=`<button class="popi ${VOICE.allMuted?'on':''}" data-m="all">${VOICE.allMuted?'🔇 Everyone muted (tap to unmute)':'🔊 Mute everyone'}</button>`;
+    names.forEach(n=>{const mu=voiceMuted(n.cid);h+=`<button class="popi ${mu?'on':''}" data-m="${n.cid}">${mu?'🔇':'🔊'} ${esc(n.name)}${mu?' (muted)':''}</button>`});
+    if(!names.length)h+=`<p class="poph">No other players in the room</p>`;
+  }
+  menu.innerHTML=h;menu.dataset.kind=kind;menu.classList.add('on');
+  $$('.popi',menu).forEach(b=>b.onclick=async()=>{
+    if(kind==='mic'){const t=b.dataset.t;await micSet(t==='all'||t==='off'?t:+t)}
+    else{const m=b.dataset.m;if(m==='all')VOICE.allMuted=!VOICE.allMuted;else{const id=+m;if(VOICE.muted.has(id))VOICE.muted.delete(id);else VOICE.muted.add(id)}applyMute()}
+    menu.classList.remove('on');
+  });
+}
+document.addEventListener('pointerdown',e=>{const m=$('#voiceMenu');if(m.classList.contains('on')&&!m.contains(e.target)&&!e.target.closest('#bMic,#bSpk'))m.classList.remove('on')});
+
 /* ================= CARD HTML ================= */
 function cardFace(s,deck){const y=sym(deck,s);return `<div class="card"><i class="tl">${y}</i><div class="frame">${y}</div><i class="br">${y}</i></div>`}
 function renderHand(){
@@ -880,6 +1044,8 @@ $('#bSet').onclick=act(()=>{const me=G.players[ME];
 $('#bShuf').onclick=act(()=>{if(G.phase==='pass'&&G.players[ME].same>=5){if(NETMODE==='client')toHost({a:'shuffle'});else doShuffle(ME)}});
 $('#bGear').onclick=act(()=>$('#menuModal').classList.add('on'));
 $('#bChat').onclick=act(()=>$('#chatPanel').classList.toggle('on'));
+$('#bMic').onclick=act(()=>openVoiceMenu('mic'));
+$('#bSpk').onclick=act(()=>openVoiceMenu('spk'));
 $('#mResume').onclick=()=>$('#menuModal').classList.remove('on');
 $('#mQuit').onclick=()=>{$('#menuModal').classList.remove('on');quit()};
 function soundLabel(){$('#mSound').textContent='Sound: '+(soundOn?'on':'off')}
