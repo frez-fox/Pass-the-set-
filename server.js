@@ -123,6 +123,9 @@ function handle(c, m) {
     case 'update': {
       const r = c.room; if (!r || !c.isHost) return;
       r.count = clampInt(m.count, 1, 8, r.count);
+      if (m.mode != null) r.mode = clampInt(m.mode, 4, 8, r.mode);
+      if (m.deck != null) r.deck = str(m.deck, 10);
+      if (typeof m.password === 'string') { const pw = str(m.password, 24); r.pw = pw ? hashPw(r.salt, pw) : null; }
       break;
     }
     case 'start': {
@@ -203,6 +206,29 @@ const FILES = {
   '/apple-touch-icon.png': ['image/png', ICON_180]
 };
 
+/* ---------------- media files (Third-Eye animation + sound), with Range support for video ---------------- */
+const MEDIA = { '/third-eye.mp4': 'video/mp4', '/third-eye.mp3': 'audio/mpeg' };
+function mediaPath(name) {
+  for (const p of [path.join(__dirname, 'public', name), path.join(__dirname, name)]) if (fs.existsSync(p)) return p;
+  return null;
+}
+function serveMedia(req, res, url) {
+  const file = mediaPath(url.slice(1));
+  if (!file) { res.writeHead(404); return res.end('missing'); }
+  const size = fs.statSync(file).size, type = MEDIA[url];
+  const range = /^bytes=(\d*)-(\d*)$/.exec(String(req.headers.range || ''));
+  if (range && (range[1] || range[2])) {
+    let start = range[1] ? parseInt(range[1], 10) : size - parseInt(range[2], 10);
+    let end = range[1] && range[2] ? parseInt(range[2], 10) : size - 1;
+    start = Math.max(0, start); end = Math.min(size - 1, end);
+    if (start > end) { res.writeHead(416, { 'Content-Range': 'bytes */' + size }); return res.end(); }
+    res.writeHead(206, { 'Content-Type': type, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': end - start + 1, 'Cache-Control': 'public, max-age=86400' });
+    return fs.createReadStream(file, { start, end }).pipe(res);
+  }
+  res.writeHead(200, { 'Content-Type': type, 'Accept-Ranges': 'bytes', 'Content-Length': size, 'Cache-Control': 'public, max-age=86400' });
+  fs.createReadStream(file).pipe(res);
+}
+
 /* ---------------- HTTP ---------------- */
 const server = http.createServer((req, res) => {
   if (req.url === '/health') { res.writeHead(200); return res.end('ok'); }
@@ -213,6 +239,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     return res.end(JSON.stringify(ice));
   }
+  const reqPath = String(req.url).split('?')[0];
+  if (MEDIA[reqPath]) return serveMedia(req, res, reqPath);
   const f = FILES[String(req.url).split('?')[0]];
   if (f) { res.writeHead(200, { 'Content-Type': f[0], 'Cache-Control': 'no-cache' }); return res.end(f[1]); }
   fs.readFile(INDEX, (err, data) => {
