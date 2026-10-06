@@ -80,6 +80,7 @@ input.txt:focus{border-color:var(--brass)}
 .card .tl{left:7%;top:5%}.card .br{right:7%;bottom:5%;transform:rotate(180deg)}
 .card .frame{position:absolute;left:17%;right:17%;top:13%;bottom:13%;border:calc(var(--cw)*.03) solid #1b1b1b;border-radius:calc(var(--cw)*.08);background:radial-gradient(circle at 50% 40%,#fffdf4,#e4d4a8);display:flex;align-items:center;justify-content:center;font-size:calc(var(--cw)*.5);box-shadow:inset 0 0 0 calc(var(--cw)*.025) #c9a24a}
 .gun{width:1em;height:.75em;display:inline-block;vertical-align:middle}
+.ic{width:1em;height:1em;display:inline-block;vertical-align:middle}
 #hand{position:absolute;left:0;right:0;bottom:calc(8px + env(safe-area-inset-bottom,0px));display:none;justify-content:center;align-items:flex-end;z-index:20;pointer-events:none;padding:0 6px}
 #hand.on{display:flex}
 .cardw{--cw:clamp(54px,min(16vw,15vh),98px);pointer-events:auto;margin:0 calc(var(--cw)*-.06);transition:transform .15s;cursor:pointer}
@@ -375,11 +376,41 @@ const PAL={skin:['#f3cfae','#e2ac80','#c58a5a','#8f5a37','#5b3a24','#fbe0cc'],
 const HAIRN=['Short','Long','Spiky','Bun','Bald','Afro'],SHIRTN=['Tee','Hoodie','Suit','Stripes','Armor'],ACCN=['None','Glasses','Cap','Crown','Shades','Band'];
 const V='\uFE0E';
 const GUN='<svg class="gun" viewBox="0 0 64 48"><path d="M5 11h45l7 5v7H31l-3 6v12a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V30l-2-7H5z" fill="currentColor"/><rect x="9" y="14" width="26" height="3" fill="#fff" opacity=".25"/></svg>';
+const IC=(vb,body)=>`<svg class="ic" viewBox="${vb}">${body}</svg>`;
+const RED=t=>`<span style="color:#c8283f">${t}</span>`;
+/* Minecraft-style TNT block */
+const TNT=IC('0 0 64 64',`<rect x="4" y="4" width="56" height="56" fill="#c62828" stroke="#3b0a0a" stroke-width="3"/>
+ <g fill="#8e1b1b"><rect x="12" y="4" width="4" height="20"/><rect x="26" y="4" width="4" height="20"/><rect x="40" y="4" width="4" height="20"/><rect x="52" y="4" width="4" height="20"/>
+ <rect x="12" y="40" width="4" height="20"/><rect x="26" y="40" width="4" height="20"/><rect x="40" y="40" width="4" height="20"/><rect x="52" y="40" width="4" height="20"/></g>
+ <rect x="4" y="24" width="56" height="16" fill="#f1f1f1" stroke="#3b0a0a" stroke-width="3"/>
+ <text x="32" y="37" text-anchor="middle" font-family="Arial Black,Arial,sans-serif" font-weight="900" font-size="15" fill="#222">TNT</text>`);
+/* mushroom cloud nuke */
+const NUKE=IC('0 0 64 64',`<defs><radialGradient id="nk" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#ffe082"/><stop offset=".55" stop-color="#ff8f00"/><stop offset="1" stop-color="#bf360c"/></radialGradient></defs>
+ <path d="M26 60 C28 48 24 42 27 34 L37 34 C40 42 36 48 38 60 Z" fill="#6d4c41"/>
+ <ellipse cx="32" cy="22" rx="26" ry="14" fill="url(#nk)"/>
+ <circle cx="14" cy="26" r="9" fill="#ef6c00"/><circle cx="50" cy="26" r="9" fill="#ef6c00"/><circle cx="32" cy="12" r="11" fill="#ffb300"/>
+ <ellipse cx="32" cy="36" rx="14" ry="4" fill="#4e342e" opacity=".85"/>
+ <rect x="8" y="58" width="48" height="4" rx="2" fill="#37474f"/>`);
+/* Jumanji-style carved elephant and lion pieces (chess-piece figurines on a round base) */
+const ELEPHANT=IC('0 0 64 64',`<g fill="currentColor"><rect x="10" y="54" width="44" height="7" rx="3.5"/>
+ <ellipse cx="38" cy="38" rx="17" ry="13"/><rect x="25" y="42" width="7" height="13" rx="2"/><rect x="42" y="42" width="7" height="13" rx="2"/>
+ <circle cx="19" cy="31" r="11"/><path d="M12 36 C7 42 8 50 12 54 L17 54 C14 49 14 44 18 40 Z"/>
+ <path d="M54 34 C60 36 60 44 57 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></g>
+ <ellipse cx="26" cy="30" rx="6" ry="9" fill="#555" stroke="#f3ead3" stroke-width="1.5"/>
+ <path d="M13 38 C10 42 11 46 15 47" fill="none" stroke="#f3ead3" stroke-width="2.5" stroke-linecap="round"/>
+ <circle cx="17" cy="28" r="1.8" fill="#f3ead3"/>`);
+const LION=IC('0 0 64 64',`<g fill="currentColor"><rect x="10" y="54" width="44" height="7" rx="3.5"/>
+ <ellipse cx="40" cy="42" rx="17" ry="10"/><rect x="28" y="46" width="6" height="9" rx="2"/><rect x="44" y="46" width="6" height="9" rx="2"/>
+ <path d="M56 40 C62 38 63 30 58 27" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="58" cy="26" r="3.5"/>
+ <circle cx="22" cy="30" r="17"/></g>
+ <circle cx="22" cy="32" r="10" fill="#e7c58a" stroke="#f3ead3" stroke-width="1"/>
+ <circle cx="18" cy="29" r="1.8" fill="#222"/><circle cx="26" cy="29" r="1.8" fill="#222"/>
+ <path d="M20 34 L24 34 L22 37 Z" fill="#222"/><path d="M22 37 C20 40 17 39 17 39 M22 37 C24 40 27 39 27 39" fill="none" stroke="#222" stroke-width="1.3" stroke-linecap="round"/>`);
 const DECKS={
-  CARDS:['🖤','♦'+V,'♣'+V,'♠'+V,'✦'+V],
-  CHESS:['♟'+V,'♛'+V,'♞'+V,'♚'+V,'♜'+V],
-  ANIMALS:['🦁','🐭','🦊','🐴','🐸'],
-  WEAPONS:['💣','🗡️','🛡️',GUN,'🏹']
+  CARDS:['🖤','♦'+V,'♣'+V,'♠'+V,RED('♥'+V),RED('♦'+V),RED('♣'+V),'🃏'],
+  CHESS:['♟'+V,'♛'+V,'♞'+V,'♚'+V,'♜'+V,'♝'+V,LION,ELEPHANT],
+  ANIMALS:['🦁','🐭','🦊','🐴','🐺','🐵','🦉','🦅'],
+  WEAPONS:['💣','🗡️','🛡️',GUN,'🏹',TNT,'⚒️',NUKE]
 };
 const DECK_ORDER=['CARDS','CHESS','ANIMALS','WEAPONS'];
 const BOTNAMES=['Ace','Nova','Rex','Luna','Kai','Zed','Mira','Bolt','Juno','Pike'];
@@ -430,7 +461,8 @@ function stopConfetti(){confettiOn=false;const cv=$('#confetti'),c=cv.getContext
 function cleanRoles(r,n){r=r||{};return {eye:clamp(parseInt(r.eye,10)||0,0,n||8),cost:clamp(Math.round((parseInt(r.cost,10)||20)/5)*5,10,50),announce:r.announce!==false}}
 const ROLES=[{id:'eye',name:'Third-EYE',icon:'👁'}];
 const sym=(deck,s)=>DECKS[deck][s];
-const setsFor=n=>n>=7?5:4;
+const setsFor=n=>n;
+const POINTS={3:[15,12,0],4:[15,12,9,0],5:[15,12,9,6,0],6:[18,15,12,9,6,0],7:[18,15,12,9,6,3,0],8:[21,18,15,12,9,6,3,0]};
 const endAt=n=>n<=5?2:3;
 
 /* ================= DRAWING HELPERS ================= */
@@ -566,7 +598,7 @@ function buildCfg(){
   $$('#modeSeg button').forEach(b=>b.onclick=()=>{cfg.mode=+b.dataset.n;store.set('cfg',cfg);buildCfg()});
   $('#modeHint').textContent=`${cfg.mode} players use ${setsFor(cfg.mode)} sets of four. The game ends when ${endAt(cfg.mode)} players are left.`;
   $('#deckBtn').textContent='Deck: '+cfg.deck;
-  $('#deckList').innerHTML=DECK_ORDER.map(k=>`<div class="deckopt ${cfg.deck===k?'on':''}" data-k="${k}"><b>${k}</b><span class="mini">${DECKS[k].slice(0,4).map(s=>`<span>${s}</span>`).join('')}</span></div>`).join('');
+  $('#deckList').innerHTML=DECK_ORDER.map(k=>`<div class="deckopt ${cfg.deck===k?'on':''}" data-k="${k}"><b>${k}</b><span class="mini">${DECKS[k].slice(0,cfg.mode).map(s=>`<span>${s}</span>`).join('')}</span></div>`).join('');
   $$('#deckList .deckopt').forEach(d=>d.onclick=()=>{cfg.deck=d.dataset.k;store.set('cfg',cfg);$('#deckList').hidden=true;buildCfg()});
 }
 $('#deckBtn').onclick=()=>{$('#deckList').hidden=!$('#deckList').hidden};
@@ -602,8 +634,9 @@ function later(ms,fn){const g=G&&G.gen,t=G&&G.token;setTimeout(()=>{if(G&&G.gen=
 const bsfx=n=>{SFX[n]();if(NETMODE==='host')toAll({k:'sfx',n})};
 function say(msg,ms){toast(msg,ms);if(NETMODE==='host')toAll({k:'toast',msg,ms})}
 function makeDeck(a){
-  const t=Math.min(G.types,a),copies=Math.max(4,Math.ceil(4*a/t)),deck=[];
-  for(let k=0;k<t;k++)for(let c=0;c<copies;c++)deck.push(k);
+  // one set of four for every player still in the game: exactly 4 cards per player, never more than 4 of a kind
+  const t=Math.min(G.types,a),kinds=shuffle(Array.from({length:G.types},(_,i)=>i)).slice(0,t),deck=[];
+  kinds.forEach(k=>{for(let c=0;c<4;c++)deck.push(k)});
   return shuffle(deck);
 }
 function startGame(room,names,seats){
@@ -734,7 +767,7 @@ function pressSet(pi){
   if(G.setOrder.length>=alivePlayers().length)finishSet();else refreshUI();
 }
 function finishSet(){
-  G.phase='result';const pts=[15,12,9];
+  G.phase='result';const pts=POINTS[clamp(G.setOrder.length,3,8)];
   const caller=G.players[G.setOrder[0]];
   const rows=G.setOrder.map((pi,k)=>({p:G.players[pi],add:pts[k]||0}));
   rows.forEach(r=>r.p.points+=r.add);
@@ -995,8 +1028,8 @@ function buildLset(){
     return}
   let h=`<p class="lbl" style="margin-top:0">Players ${LOBBY.members.length}/${LOBBY.n}${host?'':' · only the host can change settings'}</p>`;
   h+=`<p class="lbl">Mode (players)</p><div class="seg" id="lMode">${[4,5,6,7,8].map(n=>`<button data-n="${n}" class="${LOBBY.n===n?'on':''}" ${(!host||n<LOBBY.members.length)?'disabled':''}>${n}</button>`).join('')}</div>`;
-  h+=`<p class="note" style="margin:6px 0 0">${setsFor(LOBBY.n)} sets of four · game ends when ${endAt(LOBBY.n)} players are left</p>`;
-  h+=`<p class="lbl">Deck</p><div class="decklist" id="lDeck">${DECK_ORDER.map(k=>`<div class="deckopt ${LOBBY.deck===k?'on':''}" data-k="${k}" ${host?'':'style="opacity:.6;pointer-events:none"'}><b>${k}</b><span class="mini">${DECKS[k].slice(0,4).map(s=>`<span>${s}</span>`).join('')}</span></div>`).join('')}</div>`;
+  h+=`<p class="note" style="margin:6px 0 0">${LOBBY.n} sets of four · points ${POINTS[LOBBY.n].join(', ')} · game ends when ${endAt(LOBBY.n)} players are left</p>`;
+  h+=`<p class="lbl">Deck</p><div class="decklist" id="lDeck">${DECK_ORDER.map(k=>`<div class="deckopt ${LOBBY.deck===k?'on':''}" data-k="${k}" ${host?'':'style="opacity:.6;pointer-events:none"'}><b>${k}</b><span class="mini">${DECKS[k].slice(0,LOBBY.n).map(s=>`<span>${s}</span>`).join('')}</span></div>`).join('')}</div>`;
   if(LOBBY.online){
     if(host)h+=`<p class="lbl">Room password</p><input class="txt" id="lPw" maxlength="24" autocomplete="off" placeholder="No password" value="${esc(HOSTPW)}" style="width:100%;font-size:16px"><div class="row" style="margin-top:8px"><button class="btn sm pri" id="lPwSave">Save</button><button class="btn sm" id="lPwClear">Remove</button></div>`;
     else h+=`<p class="lbl">Room</p><p class="note" style="margin:0">${LOBBY.locked?'🔒 Locked with a password':'Open room'}</p>`;
