@@ -115,6 +115,8 @@ input.txt:focus{border-color:var(--brass)}
 #fxEye{position:fixed;inset:0;z-index:90;display:none;background:#000;pointer-events:none}
 #fxEye.on{display:block}
 #fxEye video{width:100%;height:100%;object-fit:cover;display:block}
+#turnTimer{position:absolute;left:100px;top:20px;z-index:36;display:none;background:rgba(7,8,13,.85);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-size:13px;pointer-events:none}
+#turnTimer.low{border-color:#e8485f;color:#ff8a98}
 #roleBadge{position:absolute;left:10px;top:72px;z-index:34;display:none;background:rgba(7,8,13,.78);border:1px solid var(--brass);color:var(--brass);border-radius:10px;padding:5px 10px;font-weight:700;font-size:13px;pointer-events:none}
 #eyeView{position:absolute;left:10px;top:106px;z-index:34;display:none;background:rgba(7,8,13,.88);border:1px solid var(--brass);border-radius:12px;padding:8px;max-width:62%}
 #eyeView.on{display:block}
@@ -274,6 +276,7 @@ input.txt:focus{border-color:var(--brass)}
     <canvas id="scene"></canvas>
     <div id="toast"></div>
     <div id="lobbyInfo"></div>
+    <div id="turnTimer"></div>
     <div id="roleBadge"></div>
     <div id="eyeView"></div>
     <div id="feed"></div>
@@ -693,13 +696,28 @@ function startDeal(){
   say('New deal. First lap: no SET allowed.',1800);
   refreshUI();later(1000,startTurn);
 }
+const TURN_MS=12000;
+// the card a player has the fewest of (ties are picked at random): with 2 kings, 2 knights and 1 queen, the queen goes
+function leastCard(p){
+  const cnt={};p.hand.forEach(x=>cnt[x]=(cnt[x]||0)+1);
+  const mn=Math.min(...p.hand.map(x=>cnt[x]));
+  const c=p.hand.map((x,i)=>i).filter(i=>cnt[p.hand[i]]===mn);
+  return c[rnd(c.length)];
+}
 function startTurn(){
-  const p=G.players[G.order[G.pos]];G.phase='pass';
-  if(p.human){p.looking=true;G.sel=null;SFX.turn();
-    toast(G.lap>=1&&hasFour(p.hand)?'Four of a kind! Press SET':'Your turn. Pick a card and press Pass',2200)}
-  else if(p.remote){p.looking=true;
-    const L=G.lap,P=G.pos;later(45000,()=>{if(G.phase==='pass'&&G.lap===L&&G.pos===P)doPass(p.i,chooseDiscard(p))})}
-  else botTurn(p);
+  const p=G.players[G.order[G.pos]];G.phase='pass';G.turnEnd=0;
+  if(p.human||p.remote){
+    p.looking=true;G.turnEnd=Date.now()+TURN_MS;
+    if(p.human){G.sel=null;SFX.turn();
+      toast(G.lap>=1&&hasFour(p.hand)?'Four of a kind! Press SET':'Your turn. Pick a card and press Pass',2200)}
+    const L=G.lap,P=G.pos;
+    later(TURN_MS,()=>{
+      if(G.phase!=='pass'||G.lap!==L||G.pos!==P||G.order[G.pos]!==p.i)return;
+      if(p.human)toast('Time is up. A card was passed for you.',2200);
+      else if(p.remote)toPeer(p.remote,{k:'toast',msg:'Time is up. A card was passed for you.',ms:2200});
+      doPass(p.i,leastCard(p));
+    });
+  }else botTurn(p);
   refreshUI();
 }
 function botTurn(p){
@@ -725,7 +743,7 @@ function doPass(pi,ci){
   if(G.phase!=='pass'||G.order[G.pos]!==pi)return;
   const p=G.players[pi],card=p.hand.splice(ci,1)[0];p.looking=false;p.newCard=null;
   const to=G.order[(G.pos+1)%G.order.length];
-  G.phase='fly';G.sel=null;bsfx('pass');
+  G.phase='fly';G.sel=null;G.turnEnd=0;bsfx('pass');
   G.fly.push({from:pi,to,t0:performance.now(),dur:560,card});
   refreshUI();
   later(600,()=>{
@@ -817,12 +835,12 @@ $('#overAgain').onclick=()=>{if(NETMODE==='client')return;const r=G.room,nm=G.na
   if(NETMODE==='host'&&seats)seats.forEach((s,i)=>{if(s.remote)toPeer(s.remote,{k:'start',me:i,n:G.n,deck:G.deck})});
   startGame(r,nm,seats)};
 $('#overLobby').onclick=()=>quit();
-function quit(){$('#eyeView').classList.remove('on');$('#roleBadge').style.display='none';$('#eyeMenu').classList.remove('on');$('#fxEye').classList.remove('on');stopConfetti();leaveNet();G=null;leaveLobbyUI();LOBBY.members=[];clearTimers();genCounter++;['#overModal','#resModal','#menuModal','#chatPanel'].forEach(s=>$(s).classList.remove('on'));$('#hand').classList.remove('on');setEdit(false);show('lobby');probe()}
+function quit(){$('#turnTimer').style.display='none';$('#eyeView').classList.remove('on');$('#roleBadge').style.display='none';$('#eyeMenu').classList.remove('on');$('#fxEye').classList.remove('on');stopConfetti();leaveNet();G=null;leaveLobbyUI();LOBBY.members=[];clearTimers();genCounter++;['#overModal','#resModal','#menuModal','#chatPanel'].forEach(s=>$(s).classList.remove('on'));$('#hand').classList.remove('on');setEdit(false);show('lobby');probe()}
 
 /* ---- state sync (host -> players) ---- */
 function snap(fi){
   const e=activeEye(fi);
-  return {eye:e?{id:e.id,t:e.target,hand:G.players[e.target].hand.slice(),ms:e.until-Date.now()}:null,rc:{cost:G.rc.cost,eye:G.rc.eye},n:G.n,deck:G.deck,types:G.types,lap:G.lap,order:G.order,pos:G.pos,phase:G.phase,setOrder:G.setOrder,
+  return {tm:G.phase==='pass'&&G.turnEnd?Math.max(0,G.turnEnd-Date.now()):0,eye:e?{id:e.id,t:e.target,hand:G.players[e.target].hand.slice(),ms:e.until-Date.now()}:null,rc:{cost:G.rc.cost,eye:G.rc.eye},n:G.n,deck:G.deck,types:G.types,lap:G.lap,order:G.order,pos:G.pos,phase:G.phase,setOrder:G.setOrder,
     fly:G.fly.map(f=>({from:f.from,to:f.to,dur:f.dur})),
     players:G.players.map(p=>({i:p.i,role:p.i===fi?p.role:null,cid:p.human?NET.id:(p.remote||null),name:p.name,prof:p.prof,hearts:p.hearts,points:p.points,alive:p.alive,looking:p.looking,same:p.same||0,
       nc:p.i===fi?p.newCard:null,hand:p.i===fi?p.hand:p.hand.map(()=>-1)}))};
@@ -839,6 +857,7 @@ function applyState(s){
   s.sel=(prev&&turnNow&&wasTurn&&prev.players[ME].hand.length===me.hand.length)?prev.sel:null;
   s.fly.forEach(f=>{const o=prev&&prev.fly.find(x=>x.from===f.from&&x.to===f.to);f.t0=o?o.t0:performance.now()});
   me.newCard=me.nc;s.now=0;
+  s.turnEnd=s.tm>0?((prev&&prev.phase==='pass'&&prev.lap===s.lap&&prev.pos===s.pos&&prev.turnEnd)?prev.turnEnd:Date.now()+s.tm):0;
   if(s.eye)s.eyeEnd=(prev&&prev.eye&&prev.eye.id===s.eye.id)?prev.eyeEnd:Date.now()+s.eye.ms;
   if(me.role&&!(prev&&prev.players[ME]&&prev.players[ME].role))toast('Your secret role: Third-EYE 👁',4500);
   if(!prev&&s.rc&&s.rc.eye>0)warmEyeFx();
@@ -1314,7 +1333,14 @@ function tickEye(){
   el.textContent=Math.max(0,Math.ceil((e.end-Date.now())/1000))+'s';
   if(e.end<=Date.now())renderEyeView();
 }
-setInterval(()=>{if(G)tickEye()},300);
+function tickTurn(){
+  const el=$('#turnTimer');if(!G){el.style.display='none';return}
+  const mine=G.phase==='pass'&&G.order&&G.order[G.pos]===ME&&G.players[ME].alive&&G.turnEnd>0;
+  if(!mine){el.style.display='none';return}
+  const left=Math.max(0,Math.ceil((G.turnEnd-Date.now())/1000));
+  el.textContent='⏱ '+left+'s to pass';el.classList.toggle('low',left<=5);el.style.display='block';
+}
+setInterval(()=>{if(G){tickEye();tickTurn()}},300);
 function refreshUI(){
   if(!G)return;const me=G.players[ME];
   LBTN.forEach(id=>$('#'+id).classList.add('hide'));
