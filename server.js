@@ -207,7 +207,7 @@ const FILES = {
 };
 
 /* ---------------- media files (Third-Eye animation + sound), with Range support for video ---------------- */
-const MEDIA = { '/third-eye.mp4': 'video/mp4', '/third-eye.mp3': 'audio/mpeg' };
+const MEDIA = { '/third-eye.mp4': 'video/mp4', '/third-eye.mp3': 'audio/mpeg', '/switch.mp3': 'audio/mpeg' };
 function mediaPath(name) {
   for (const p of [path.join(__dirname, 'public', name), path.join(__dirname, name)]) if (fs.existsSync(p)) return p;
   return null;

@@ -105,7 +105,7 @@ input.txt:focus{border-color:var(--brass)}
 #hud.edit .hb.pick{outline-color:#fff}
 #voiceMenu{display:none}
 #voiceMenu.on{display:flex}
-.pop{position:absolute;right:10px;top:86px;z-index:46;min-width:210px;max-width:84vw;max-height:70%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;flex-direction:column;gap:6px}
+.pop{position:absolute;right:10px;top:50px;z-index:46;min-width:210px;max-width:84vw;max-height:70%;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px;flex-direction:column;gap:6px}
 .pop.on{display:flex}
 .poph{margin:2px 6px;color:var(--mute);font-size:12px}
 .popi{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px 12px;text-align:left;font:700 14px "DM Sans",sans-serif;cursor:pointer}
@@ -115,10 +115,10 @@ input.txt:focus{border-color:var(--brass)}
 #fxEye{position:fixed;inset:0;z-index:90;display:none;background:#000;pointer-events:none}
 #fxEye.on{display:block}
 #fxEye video{width:100%;height:100%;object-fit:cover;display:block}
-#turnTimer{position:absolute;left:100px;top:20px;z-index:36;display:none;background:rgba(7,8,13,.85);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-size:13px;pointer-events:none}
+#turnTimer{position:absolute;left:96px;top:5px;z-index:36;display:none;background:rgba(7,8,13,.85);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-size:13px;pointer-events:none}
 #turnTimer.low{border-color:#e8485f;color:#ff8a98}
-#roleBadge{position:absolute;left:10px;top:72px;z-index:34;display:none;background:rgba(7,8,13,.78);border:1px solid var(--brass);color:var(--brass);border-radius:10px;padding:5px 10px;font-weight:700;font-size:13px;pointer-events:none}
-#eyeView{position:absolute;left:10px;top:106px;z-index:34;display:none;background:rgba(7,8,13,.88);border:1px solid var(--brass);border-radius:12px;padding:8px;max-width:62%}
+#roleBadge{position:absolute;left:96px;top:36px;z-index:34;display:none;background:rgba(7,8,13,.78);border:1px solid var(--brass);color:var(--brass);border-radius:10px;padding:5px 10px;font-weight:700;font-size:13px;pointer-events:none}
+#eyeView{position:absolute;left:126px;top:70px;z-index:34;display:none;background:rgba(7,8,13,.88);border:1px solid var(--brass);border-radius:12px;padding:8px;max-width:62%}
 #eyeView.on{display:block}
 #eyeView .eh{font-size:13px;margin-bottom:6px}
 #eyeView .show{justify-content:flex-start}
@@ -137,7 +137,7 @@ input.txt:focus{border-color:var(--brass)}
 .step b{min-width:34px;text-align:center;font-size:16px}
 .rslot{border:1px dashed var(--line);border-radius:12px;padding:12px;color:var(--mute);font-size:13px;margin-bottom:8px;text-align:center}
 #lobbyInfo{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:33;display:none;text-align:center;background:rgba(7,8,13,.72);border-radius:12px;padding:6px 12px;font-size:13px;pointer-events:none;max-width:60%}
-#game.lobby #feed{right:auto;left:10px;top:72px;align-items:flex-start;max-width:46%}
+#game.lobby #feed{right:auto;left:10px;top:54px;align-items:flex-start;max-width:46%}
 .code2{font:700 14px ui-monospace,Menlo,monospace;color:var(--brass);letter-spacing:.1em}
 .lsheet{width:min(100%,520px)}
 .lhead{display:flex;gap:8px;align-items:center;justify-content:space-between}
@@ -148,10 +148,10 @@ input.txt:focus{border-color:var(--brass)}
 #editBar input{flex:1}
 #toast{position:absolute;left:50%;top:calc(72px);transform:translateX(-50%);z-index:35;background:rgba(18,21,28,.9);border:1px solid var(--line);border-radius:12px;padding:9px 14px;font-weight:700;max-width:80%;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.on{opacity:1}
-#feed{position:absolute;right:10px;top:88px;z-index:34;display:flex;flex-direction:column;gap:4px;align-items:flex-end;max-width:56%;pointer-events:none}
+#feed{position:absolute;right:10px;top:54px;z-index:34;display:flex;flex-direction:column;gap:4px;align-items:flex-end;max-width:56%;pointer-events:none}
 #feed div{background:rgba(7,8,13,.7);border-radius:10px;padding:5px 9px;font-size:13px}
 #feed b{color:var(--brass)}
-#chatPanel{position:absolute;right:10px;top:84px;width:min(320px,86vw);height:min(280px,50%);z-index:44;background:var(--panel);border:1px solid var(--line);border-radius:16px;display:none;flex-direction:column;padding:10px;gap:8px}
+#chatPanel{position:absolute;right:10px;top:50px;width:min(320px,86vw);height:min(280px,50%);z-index:44;background:var(--panel);border:1px solid var(--line);border-radius:16px;display:none;flex-direction:column;padding:10px;gap:8px}
 #chatPanel.on{display:flex}
 #chatLog{flex:1;overflow:auto;font-size:14px;display:flex;flex-direction:column;gap:4px;user-select:text;-webkit-user-select:text}
 #chatLog b{color:var(--brass)}
@@ -298,6 +298,7 @@ input.txt:focus{border-color:var(--brass)}
       <button class="hb set hide" id="bSet" data-id="set">SET!</button>
       <button class="hb hide" id="bShuf" data-id="shuffle">🔀 Shuffle</button>
       <button class="hb pass hide" id="bEye" data-id="eye">👁 Third-EYE</button>
+      <button class="hb pass hide" id="bSwap" data-id="swap">🔄 Switch</button>
     </div>
     <div id="editBar"><span>Size</span><input type="range" id="editSize" min="0.6" max="1.9" step="0.05" value="1"><button class="btn sm" id="editReset">Reset</button><button class="btn sm pri" id="editDone">Done</button></div>
   </section>
@@ -422,9 +423,12 @@ const CHAT=['hmm 👀','nice one','ok ok','who has the lion?','careful...','my h
 let profile=store.get('profile',{name:'Player',skin:0,hair:0,hairCol:0,shirt:0,shirtCol:0,acc:0});
 let cfg=store.get('cfg',{mode:4,deck:'CARDS'});
 let layout=store.get('layout',{});
-const DEF={gear:{x:.07,y:.08,s:1},chat:{x:.93,y:.08,s:1},look:{x:.9,y:.4,s:1},pass:{x:.9,y:.55,s:1},set:{x:.9,y:.72,s:1},shuffle:{x:.9,y:.88,s:1},mic:{x:.85,y:.08,s:1},spk:{x:.77,y:.08,s:1},lset:{x:.9,y:.3,s:1},lcust:{x:.9,y:.46,s:1},eye:{x:.74,y:.6,s:1},lleave:{x:.9,y:.62,s:1},lstart:{x:.5,y:.9,s:1}};
+// default button layout (players who never used Custom get this one)
+const DEF={gear:{x:.087,y:.07,s:.55},chat:{x:.93,y:.07,s:.55},mic:{x:.85,y:.07,s:.55},spk:{x:.765,y:.07,s:.55},
+  look:{x:.92,y:.3,s:1},pass:{x:.854,y:.57,s:1},shuffle:{x:.087,y:.29,s:1},set:{x:.081,y:.49,s:1},eye:{x:.078,y:.73,s:1},swap:{x:.078,y:.73,s:1},
+  lset:{x:.9,y:.3,s:1},lcust:{x:.9,y:.46,s:1},lleave:{x:.9,y:.62,s:1},lstart:{x:.5,y:.9,s:1}};
 let eyeCounter=0,EYE_AUD=null;
-let ME=0,NETMODE=null,LOBBY={on:false,isHost:false,online:false,n:4,deck:'CARDS',locked:false,members:[],roles:{eye:0,cost:20,announce:true}};
+let ME=0,NETMODE=null,LOBBY={on:false,isHost:false,online:false,n:4,deck:'CARDS',locked:false,members:[],roles:{eye:0,swap:0,cost:20,scost:30,announce:true}};
 let net='local',role='host',screenId='lobby',G=null,editing=false,editSel='look',genCounter=0,waitTimer=null,searchTimer=null;
 
 /* ================= SOUND + CONFETTI ================= */
@@ -461,8 +465,13 @@ function confetti(){
   })(start);
 }
 function stopConfetti(){confettiOn=false;const cv=$('#confetti'),c=cv.getContext('2d');c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height)}
-function cleanRoles(r,n){r=r||{};return {eye:clamp(parseInt(r.eye,10)||0,0,n||8),cost:clamp(Math.round((parseInt(r.cost,10)||20)/5)*5,10,50),announce:r.announce!==false}}
-const ROLES=[{id:'eye',name:'Third-EYE',icon:'👁'}];
+function cleanRoles(r,n){r=r||{};n=n||8;
+  const eye=clamp(parseInt(r.eye,10)||0,0,n),swap=clamp(parseInt(r.swap,10)||0,0,n-eye);
+  return {eye,swap,cost:clamp(Math.round((parseInt(r.cost,10)||20)/5)*5,10,50),scost:clamp(parseInt(r.scost,10)||30,16,79),announce:r.announce!==false}}
+// every role: count key, cost key, allowed points, step
+const ROLES=[{id:'eye',name:'Third-EYE',icon:'👁',ck:'eye',pk:'cost',min:10,max:50,step:5},
+             {id:'switch',name:'Switch',icon:'🔄',ck:'swap',pk:'scost',min:16,max:79,step:1}];
+const ROLE_LABEL={eye:'👁 Third-EYE',switch:'🔄 Switch'};
 const sym=(deck,s)=>DECKS[deck][s];
 const setsFor=n=>n;
 const POINTS={3:[15,12,0],4:[15,12,9,0],5:[15,12,9,6,0],6:[18,15,12,9,6,0],7:[18,15,12,9,6,3,0],8:[21,18,15,12,9,6,3,0]};
@@ -652,14 +661,17 @@ function startGame(room,names,seats){
   $('#feed').innerHTML='';$('#chatLog').innerHTML='';
   G.rc=cleanRoles(room.roles,n);G.eyes=[];assignRoles();
   if(G.rc.eye>0)warmEyeFx();
+  if(G.rc.swap>0)warmSwapFx();
   applyLayout();refreshUI();say('Shuffling…',1200);
-  const gg=G.gen;setTimeout(()=>{if(G&&G.gen===gg&&G.players[ME].role)toast('Your secret role: Third-EYE 👁',4500)},1700);
+  const gg=G.gen;setTimeout(()=>{if(G&&G.gen===gg&&G.players[ME].role)toast('Your secret role: '+ROLE_LABEL[G.players[ME].role],4500)},1700);
   later(1300,startDeal);
 }
 function alivePlayers(){return G.players.filter(p=>p.alive)}
 function assignRoles(){
   G.players.forEach(p=>p.role=null);
-  shuffle(G.players.map(p=>p.i)).slice(0,G.rc.eye).forEach(i=>{G.players[i].role='eye'});
+  const ids=shuffle(G.players.map(p=>p.i));
+  ids.slice(0,G.rc.eye).forEach(i=>{G.players[i].role='eye'});
+  ids.slice(G.rc.eye,G.rc.eye+G.rc.swap).forEach(i=>{G.players[i].role='switch'});   // one role per player
 }
 function activeEye(pi){const now=Date.now();G.eyes=(G.eyes||[]).filter(e=>e.until>now);return G.eyes.find(e=>e.by===pi)}
 function useEye(pi,t){
@@ -672,6 +684,39 @@ function useEye(pi,t){
   fxEye(pi);
   const g=G.gen;setTimeout(()=>{if(G&&G.gen===g){activeEye(-1);refreshUI()}},35100);
   refreshUI();return true;
+}
+// exchange two hands; the owner of the bigger hand keeps their rarest leftover card(s) so every hand keeps its size
+function swapHands(a,b){
+  const A=G.players[a],B=G.players[b],la=A.hand.length,lb=B.hand.length;
+  const ha=A.hand.slice(),hb=B.hand.slice();
+  const keep=(h,k)=>{const kept=[];
+    for(let i=0;i<k;i++){const cnt={};h.forEach(x=>cnt[x]=(cnt[x]||0)+1);const mn=Math.min(...h.map(x=>cnt[x]));
+      const c=h.map((x,j)=>j).filter(j=>cnt[h[j]]===mn);const j=c[rnd(c.length)];kept.push(h[j]);h.splice(j,1)}return kept};
+  let ka=[],kb=[];
+  if(la>lb)ka=keep(ha,la-lb);else if(lb>la)kb=keep(hb,lb-la);
+  A.hand=[...hb,...ka].sort((x,y)=>x-y);B.hand=[...ha,...kb].sort((x,y)=>x-y);
+  [A,B].forEach(p=>{p.target=null;p.sig=null;p.same=0;p.newCard=null});
+}
+function useSwap(pi,t){
+  const p=G.players[pi],tg=G.players[t];
+  if(!p||!tg||!p.alive||!tg.alive||p.role!=='switch'||pi===t)return false;
+  if(G.phase!=='pass'||p.points<G.rc.scost)return false;
+  p.points-=G.rc.scost;
+  swapHands(pi,t);
+  if(pi===ME||t===ME)G.sel=null;
+  fxSwap(pi,t);
+  refreshUI();return true;
+}
+function fxSwap(by,t){
+  const ann=G.rc.announce;
+  if(ann||by===ME||t===ME){playSwapFx();if(by!==ME)toast(t===ME?'🔄 Your cards were switched!':'🔄 A Switch was used',2600)}
+  if(NETMODE==='host')G.players.forEach(p=>{if(p.remote&&(ann||p.i===by||p.i===t))toPeer(p.remote,{k:'fx',a:'swap',own:p.i===by,tg:p.i===t})});
+}
+const SWAPFX={on:false,t0:0,dur:5000};let SWAP_AUD=null;
+function warmSwapFx(){try{if(!SWAP_AUD){SWAP_AUD=new Audio('/switch.mp3');SWAP_AUD.preload='auto'}}catch(e){}}
+function playSwapFx(){
+  SWAPFX.on=true;SWAPFX.t0=performance.now();
+  if(soundOn){try{const a=SWAP_AUD||new Audio('/switch.mp3');a.currentTime=0;const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{})}catch(e){}}
 }
 function fxEye(by){
   const ann=G.rc.announce;
@@ -721,6 +766,8 @@ function startTurn(){
   refreshUI();
 }
 function botTurn(p){
+  if(p.role==='switch'&&G.phase==='pass'&&p.points>=G.rc.scost&&Math.random()<.15){
+    const c=alivePlayers().filter(x=>x.i!==p.i);if(c.length)useSwap(p.i,c[rnd(c.length)].i)}
   if(p.role==='eye'&&p.points>=G.rc.cost&&!activeEye(p.i)&&Math.random()<.2){
     const c=alivePlayers().filter(x=>x.i!==p.i);if(c.length)useEye(p.i,c[rnd(c.length)].i)}
   later(800+Math.random()*700,()=>{p.looking=true;refreshUI();
@@ -835,12 +882,12 @@ $('#overAgain').onclick=()=>{if(NETMODE==='client')return;const r=G.room,nm=G.na
   if(NETMODE==='host'&&seats)seats.forEach((s,i)=>{if(s.remote)toPeer(s.remote,{k:'start',me:i,n:G.n,deck:G.deck})});
   startGame(r,nm,seats)};
 $('#overLobby').onclick=()=>quit();
-function quit(){$('#turnTimer').style.display='none';$('#eyeView').classList.remove('on');$('#roleBadge').style.display='none';$('#eyeMenu').classList.remove('on');$('#fxEye').classList.remove('on');stopConfetti();leaveNet();G=null;leaveLobbyUI();LOBBY.members=[];clearTimers();genCounter++;['#overModal','#resModal','#menuModal','#chatPanel'].forEach(s=>$(s).classList.remove('on'));$('#hand').classList.remove('on');setEdit(false);show('lobby');probe()}
+function quit(){SWAPFX.on=false;try{if(SWAP_AUD)SWAP_AUD.pause()}catch(e){}$('#turnTimer').style.display='none';$('#eyeView').classList.remove('on');$('#roleBadge').style.display='none';$('#eyeMenu').classList.remove('on');$('#fxEye').classList.remove('on');stopConfetti();leaveNet();G=null;leaveLobbyUI();LOBBY.members=[];clearTimers();genCounter++;['#overModal','#resModal','#menuModal','#chatPanel'].forEach(s=>$(s).classList.remove('on'));$('#hand').classList.remove('on');setEdit(false);show('lobby');probe()}
 
 /* ---- state sync (host -> players) ---- */
 function snap(fi){
   const e=activeEye(fi);
-  return {tm:G.phase==='pass'&&G.turnEnd?Math.max(0,G.turnEnd-Date.now()):0,eye:e?{id:e.id,t:e.target,hand:G.players[e.target].hand.slice(),ms:e.until-Date.now()}:null,rc:{cost:G.rc.cost,eye:G.rc.eye},n:G.n,deck:G.deck,types:G.types,lap:G.lap,order:G.order,pos:G.pos,phase:G.phase,setOrder:G.setOrder,
+  return {tm:G.phase==='pass'&&G.turnEnd?Math.max(0,G.turnEnd-Date.now()):0,eye:e?{id:e.id,t:e.target,hand:G.players[e.target].hand.slice(),ms:e.until-Date.now()}:null,rc:{cost:G.rc.cost,eye:G.rc.eye,swap:G.rc.swap,scost:G.rc.scost},n:G.n,deck:G.deck,types:G.types,lap:G.lap,order:G.order,pos:G.pos,phase:G.phase,setOrder:G.setOrder,
     fly:G.fly.map(f=>({from:f.from,to:f.to,dur:f.dur})),
     players:G.players.map(p=>({i:p.i,role:p.i===fi?p.role:null,cid:p.human?NET.id:(p.remote||null),name:p.name,prof:p.prof,hearts:p.hearts,points:p.points,alive:p.alive,looking:p.looking,same:p.same||0,
       nc:p.i===fi?p.newCard:null,hand:p.i===fi?p.hand:p.hand.map(()=>-1)}))};
@@ -854,13 +901,14 @@ function applyState(s){
   const prev=G,me=s.players[ME];
   const turnNow=s.phase==='pass'&&s.order[s.pos]===ME;
   const wasTurn=!!prev&&prev.phase==='pass'&&prev.order[prev.pos]===ME&&prev.lap===s.lap&&prev.pos===s.pos;
-  s.sel=(prev&&turnNow&&wasTurn&&prev.players[ME].hand.length===me.hand.length)?prev.sel:null;
+  s.sel=(prev&&turnNow&&wasTurn&&prev.players[ME].hand.join()===me.hand.join())?prev.sel:null;
   s.fly.forEach(f=>{const o=prev&&prev.fly.find(x=>x.from===f.from&&x.to===f.to);f.t0=o?o.t0:performance.now()});
   me.newCard=me.nc;s.now=0;
   s.turnEnd=s.tm>0?((prev&&prev.phase==='pass'&&prev.lap===s.lap&&prev.pos===s.pos&&prev.turnEnd)?prev.turnEnd:Date.now()+s.tm):0;
   if(s.eye)s.eyeEnd=(prev&&prev.eye&&prev.eye.id===s.eye.id)?prev.eyeEnd:Date.now()+s.eye.ms;
-  if(me.role&&!(prev&&prev.players[ME]&&prev.players[ME].role))toast('Your secret role: Third-EYE 👁',4500);
+  if(me.role&&!(prev&&prev.players[ME]&&prev.players[ME].role))toast('Your secret role: '+(ROLE_LABEL[me.role]||me.role),4500);
   if(!prev&&s.rc&&s.rc.eye>0)warmEyeFx();
+  if(!prev&&s.rc&&s.rc.swap>0)warmSwapFx();
   G=s;
   if(screenId!=='game'){show('game');applyLayout()}
   if(s.phase!=='result')$('#resModal').classList.remove('on');
@@ -948,7 +996,7 @@ function leaveLobbyUI(){
 function refreshLobbyUI(){
   if(!LOBBY.on)return;
   $('#game').classList.add('lobby');
-  ['bLook','bPass','bSet','bShuf','bEye'].forEach(id=>$('#'+id).classList.add('hide'));
+  ['bLook','bPass','bSet','bShuf','bEye','bSwap'].forEach(id=>$('#'+id).classList.add('hide'));
   ['bLSet','bLCust','bLLeave','bLStart'].forEach(id=>$('#'+id).classList.remove('hide'));
   const st=$('#bLStart');st.textContent=LOBBY.isHost?'▶ START':'Waiting for host…';st.disabled=!LOBBY.isHost;
   const info=$('#lobbyInfo');info.style.display='block';
@@ -971,7 +1019,7 @@ function enterHostLobby(){
   enterLobbyScreen();chatAll('Bar','Room open. Waiting for friends…');lobbyBroadcast();
 }
 function enterClientLobby(){
-  LOBBY={on:true,isHost:false,online:true,n:0,deck:'CARDS',locked:false,roles:{eye:0,cost:20,announce:true},members:[{id:NET.id,name:profile.name,prof:profile,host:false}]};
+  LOBBY={on:true,isHost:false,online:true,n:0,deck:'CARDS',locked:false,roles:{eye:0,swap:0,cost:20,scost:30,announce:true},members:[{id:NET.id,name:profile.name,prof:profile,host:false}]};
   enterLobbyScreen();
 }
 function openPracticeLobby(){
@@ -1022,6 +1070,9 @@ function lobbySetting(ch){
   if('password' in ch){HOSTPW=ch.password;LOBBY.locked=!!HOSTPW&&LOBBY.online;if(NETMODE==='host')netSend({t:'update',count:LOBBY.members.length,password:HOSTPW})}
   lobbyBroadcast();
 }
+let repT=null,repI=null;
+function stopRepeat(){clearTimeout(repT);clearInterval(repI);repT=repI=null}
+document.addEventListener('pointerup',stopRepeat);document.addEventListener('pointercancel',stopRepeat);
 function buildLset(){
   const host=LOBBY.isHost,box=$('#lbody');
   $$('#ltabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===LSTAB));
@@ -1030,18 +1081,19 @@ function buildLset(){
     const stepper=(id,val,min,max)=>`<div class="step"><button data-s="${id}" data-d="-1" ${(!H||val<=min)?'disabled':''}>−</button><b>${val}</b><button data-s="${id}" data-d="1" ${(!H||val>=max)?'disabled':''}>+</button></div>`;
     let rh='';
     ROLES.forEach(ro=>{
+      const other=ROLES.filter(x=>x.id!==ro.id).reduce((t,x)=>t+R[x.ck],0);   // a player never gets two roles
       rh+=`<div class="rrow"><div class="rn">${ro.icon} ${ro.name}</div>
-        <div class="rctl"><span class="rl">Players</span>${stepper(ro.id+'Count',R[ro.id],0,LOBBY.n)}</div>
-        <div class="rctl"><span class="rl">Points</span>${stepper(ro.id+'Cost',R.cost,10,50)}</div></div>`;
+        <div class="rctl"><span class="rl">Players</span>${stepper(ro.id+'|c',R[ro.ck],0,LOBBY.n-other)}</div>
+        <div class="rctl"><span class="rl">Points</span>${stepper(ro.id+'|p',R[ro.pk],ro.min,ro.max)}</div></div>`;
     });
     rh+=`<div class="rslot">More roles will appear here</div>`;
     rh+=`<p class="lbl" style="margin-top:6px">Show the animation to everyone when it is used</p><div class="seg" id="rAnn"><button data-a="1" class="${R.announce?'on':''}" ${H?'':'disabled'}>On</button><button data-a="0" class="${R.announce?'':'on'}" ${H?'':'disabled'}>Off</button></div>`;
-    rh+=`<p class="note" style="margin:8px 0 0">Players: how many get the role (0 to ${LOBBY.n}). Points: what the player gives up each time. Roles are handed out randomly when the game starts, and nobody gets more than one.${H?'':' Only the host can change these.'}</p>`;
+    rh+=`<p class="note" style="margin:8px 0 0">Players: how many get the role (together at most ${LOBBY.n}). Points: what the player gives up each time (hold + or − to move faster). Roles are handed out randomly when the game starts, and nobody gets more than one.${H?'':' Only the host can change these.'}</p>`;
     box.innerHTML=rh;
-    $$('.step button',box).forEach(b=>b.onclick=()=>{
-      const d=+b.dataset.d,id=b.dataset.s;
-      if(id==='eyeCount')lobbySetting({roles:{eye:R.eye+d}});
-      else if(id==='eyeCost')lobbySetting({roles:{cost:R.cost+5*d}});
+    $$('.step button',box).forEach(b=>{
+      const doStep=()=>{const [rid,kind]=b.dataset.s.split('|'),ro=ROLES.find(x=>x.id===rid),d=+b.dataset.d,key=kind==='c'?ro.ck:ro.pk,st=kind==='c'?1:ro.step;
+        lobbySetting({roles:{[key]:LOBBY.roles[key]+d*st}})};
+      b.onpointerdown=e=>{e.preventDefault();stopRepeat();doStep();repT=setTimeout(()=>{repI=setInterval(doStep,90)},420)};
     });
     $$('#rAnn button').forEach(b=>b.onclick=()=>lobbySetting({roles:{announce:b.dataset.a==='1'}}));
     return}
@@ -1148,7 +1200,8 @@ function onHostMsg(d){
     case 'toast':toast(String(d.msg),d.ms|0||1800);break;
     case 'chat':chatAdd(String(d.name),String(d.text));break;
     case 'sfx':if(SFX[d.n])SFX[d.n]();break;
-    case 'fx':if(d.a==='eye'){playEyeFx();if(!d.own)toast('👁 A Third-EYE was used',2200)}break;
+    case 'fx':if(d.a==='eye'){playEyeFx();if(!d.own)toast('👁 A Third-EYE was used',2200)}
+      else if(d.a==='swap'){playSwapFx();if(!d.own)toast(d.tg?'🔄 Your cards were switched!':'🔄 A Switch was used',2600)}break;
     case 'result':if(G)showResult(d.d);break;
     case 'over':if(G)showOver(d.d);break;
   }
@@ -1168,6 +1221,7 @@ function onPeerMsg(from,d){
     case 'chat':chatAll(p.name,String(d.text||'').slice(0,80));break;
     case 'look':if(p.alive){p.looking=!p.looking;refreshUI()}break;
     case 'eye':if(Number.isInteger(d.t)&&d.t>=0&&d.t<G.n)useEye(p.i,d.t);break;
+    case 'swap':if(Number.isInteger(d.t)&&d.t>=0&&d.t<G.n)useSwap(p.i,d.t);break;
     case 'pass':if(p.alive&&Number.isInteger(d.ci)&&d.ci>=0&&d.ci<p.hand.length)doPass(p.i,d.ci);break;
     case 'set':if(!p.alive)break;
       if(G.phase==='set')pressSet(p.i);else if(G.phase==='pass'&&G.lap>=1&&hasFour(p.hand))callSet(p.i);break;
@@ -1362,7 +1416,11 @@ function refreshUI(){
     const eb=$('#bEye');eb.classList.toggle('hide',!(has||editing));eb.classList.add('stack');
     eb.innerHTML=`👁 Third-EYE<small>${G.rc.cost} points</small>`;
     eb.disabled=!(has&&live&&me.points>=G.rc.cost&&!getEye());
-    const rb=$('#roleBadge');rb.style.display=has?'block':'none';rb.textContent='👁 Role: Third-EYE';
+    const hs=me.alive&&me.role==='switch',sb=$('#bSwap');
+    sb.classList.toggle('hide',!(hs||editing));sb.classList.add('stack');
+    sb.innerHTML=`🔄 Switch<small>${G.rc.scost} points</small>`;
+    sb.disabled=!(hs&&G.phase==='pass'&&me.points>=G.rc.scost);
+    const rb=$('#roleBadge');rb.style.display=me.role?'block':'none';rb.textContent=me.role?'Role: '+ROLE_LABEL[me.role]:'';
     renderEyeView();
   }
   if(NETMODE==='host')sync();
@@ -1379,15 +1437,21 @@ $('#bSet').onclick=act(()=>{const me=G.players[ME];
 $('#bShuf').onclick=act(()=>{if(G.phase==='pass'&&G.players[ME].same>=5){if(NETMODE==='client')toHost({a:'shuffle'});else doShuffle(ME)}});
 $('#bGear').onclick=act(()=>$('#menuModal').classList.add('on'));
 $('#bChat').onclick=act(()=>$('#chatPanel').classList.toggle('on'));
-$('#bEye').onclick=act(()=>{
-  if($('#bEye').disabled)return;
-  const menu=$('#eyeMenu');if(menu.classList.contains('on')){menu.classList.remove('on');return}
+function openTargetMenu(kind){
+  const btn=kind==='eye'?$('#bEye'):$('#bSwap');
+  if(btn.disabled)return;
+  const menu=$('#eyeMenu');if(menu.classList.contains('on')&&menu.dataset.kind===kind){menu.classList.remove('on');return}
   const opts=G.players.filter(p=>p.alive&&p.i!==ME);
-  menu.innerHTML=`<p class="poph">Give up ${G.rc.cost} points to see a player's cards for 35 seconds</p>`+opts.map(p=>`<button class="popi" data-t="${p.i}">👁 ${esc(p.name)}</button>`).join('');
-  menu.classList.add('on');
-  $$('.popi',menu).forEach(b=>b.onclick=()=>{menu.classList.remove('on');const t=+b.dataset.t;if(NETMODE==='client')toHost({a:'eye',t});else useEye(ME,t)});
-});
-document.addEventListener('pointerdown',e=>{const m=$('#eyeMenu');if(m.classList.contains('on')&&!m.contains(e.target)&&!e.target.closest('#bEye'))m.classList.remove('on')});
+  const head=kind==='eye'?`Give up ${G.rc.cost} points to see a player's cards for 35 seconds`:`Give up ${G.rc.scost} points to swap your cards with a player`;
+  const ic=kind==='eye'?'👁':'🔄';
+  menu.innerHTML=`<p class="poph">${head}</p>`+opts.map(p=>`<button class="popi" data-t="${p.i}">${ic} ${esc(p.name)}</button>`).join('');
+  menu.dataset.kind=kind;menu.classList.add('on');
+  $$('.popi',menu).forEach(b=>b.onclick=()=>{menu.classList.remove('on');const t=+b.dataset.t;
+    if(NETMODE==='client')toHost({a:kind,t});else if(kind==='eye')useEye(ME,t);else useSwap(ME,t)});
+}
+$('#bEye').onclick=act(()=>openTargetMenu('eye'));
+$('#bSwap').onclick=act(()=>openTargetMenu('swap'));
+document.addEventListener('pointerdown',e=>{const m=$('#eyeMenu');if(m.classList.contains('on')&&!m.contains(e.target)&&!e.target.closest('#bEye,#bSwap'))m.classList.remove('on')});
 $('#bLSet').onclick=act(()=>openLset());
 $('#bLCust').onclick=act(()=>{buildChar();show('char')});
 $('#bLLeave').onclick=act(()=>quit());
@@ -1501,8 +1565,71 @@ function drawScene(t){
   // vignette
   gr=c.createRadialGradient(g.cx,g.cy,Math.min(W,H)*.25,g.cx,g.cy,Math.max(W,H)*.78);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.82)');
   c.fillStyle=gr;c.fillRect(0,0,W,H);
+  drawSwapFx(c,W,H,g,performance.now());
 }
 
+/* ---- Switch animation: dark room, red Indian-style magic circle (yantra / lotus mandala) and a skull on the table, 5 seconds ---- */
+function drawSkull(c,x,y,s){
+  c.save();c.translate(x,y);
+  c.shadowColor='#ff1a1a';c.shadowBlur=s*.7;c.fillStyle='#ffd9d2';
+  c.beginPath();c.ellipse(0,-s*.12,s*.8,s*.84,0,0,Math.PI*2);c.fill();
+  c.beginPath();c.moveTo(-s*.5,s*.45);c.quadraticCurveTo(-s*.56,s*1.02,-s*.28,s*1.06);c.lineTo(s*.28,s*1.06);c.quadraticCurveTo(s*.56,s*1.02,s*.5,s*.45);c.closePath();c.fill();
+  c.shadowBlur=0;c.fillStyle='#1a0000';
+  c.beginPath();c.ellipse(-s*.3,-s*.02,s*.23,s*.27,0,0,7);c.ellipse(s*.3,-s*.02,s*.23,s*.27,0,0,7);c.fill();
+  c.fillStyle='#ff2a2a';c.shadowColor='#ff0000';c.shadowBlur=s*.5;
+  c.beginPath();c.arc(-s*.3,s*.01,s*.08,0,7);c.arc(s*.3,s*.01,s*.08,0,7);c.fill();
+  c.shadowBlur=0;c.fillStyle='#1a0000';
+  c.beginPath();c.moveTo(0,s*.18);c.lineTo(-s*.11,s*.46);c.lineTo(s*.11,s*.46);c.closePath();c.fill();
+  c.strokeStyle='#1a0000';c.lineWidth=Math.max(1,s*.045);c.beginPath();
+  c.moveTo(-s*.32,s*.7);c.lineTo(s*.32,s*.7);for(let i=-2;i<=2;i++){c.moveTo(i*s*.13,s*.6);c.lineTo(i*s*.13,s*.92)}
+  c.stroke();c.restore();
+}
+function drawSwapFx(c,W,H,g,now){
+  if(!SWAPFX.on)return;
+  const e=now-SWAPFX.t0,D=SWAPFX.dur;
+  if(e>=D){SWAPFX.on=false;return}
+  const fin=clamp(e/900,0,1),fout=clamp((D-e)/900,0,1),a=Math.min(fin,fout),grow=1-Math.pow(1-fin,3);
+  c.save();
+  // dark theme: the whole room goes black with a red glow
+  c.fillStyle=`rgba(0,0,0,${.74*a})`;c.fillRect(0,0,W,H);
+  let gr=c.createRadialGradient(g.cx,g.cy,10,g.cx,g.cy,Math.max(W,H)*.7);
+  gr.addColorStop(0,`rgba(140,0,0,${.35*a})`);gr.addColorStop(1,`rgba(0,0,0,${.35*a})`);
+  c.fillStyle=gr;c.fillRect(0,0,W,H);
+  const R=g.rx*.95*grow,sq=g.ry/g.rx,rot=e/1000;
+  c.translate(g.cx,g.cy+g.ry*.12);c.globalAlpha=a;
+  // --- the circle lies flat on the table ---
+  c.save();c.scale(1,sq);
+  c.shadowColor='#ff1010';c.shadowBlur=14;c.strokeStyle='#ff3030';c.lineWidth=Math.max(1.5,R*.011);
+  const ring=r=>{c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.stroke()};
+  ring(R);ring(R*.955);
+  c.save();c.rotate(rot*.15);                       // rune ticks between the outer rings
+  for(let i=0;i<96;i++){const an=i/96*Math.PI*2,l=i%4===0?.05:.025;c.beginPath();c.moveTo(Math.cos(an)*R*.955,Math.sin(an)*R*.955);c.lineTo(Math.cos(an)*R*(.955-l),Math.sin(an)*R*(.955-l));c.stroke()}
+  c.restore();
+  ring(R*.86);
+  c.save();c.rotate(-rot*.2);                       // 16 petal lotus
+  for(let k=0;k<16;k++){c.save();c.rotate(k*Math.PI*2/16);
+    const r1=R*.56,r2=R*.85,pw=R*.085;
+    c.beginPath();c.moveTo(0,-r1);c.bezierCurveTo(pw,-(r1+(r2-r1)*.3),pw*.6,-(r2-(r2-r1)*.2),0,-r2);
+    c.bezierCurveTo(-pw*.6,-(r2-(r2-r1)*.2),-pw,-(r1+(r2-r1)*.3),0,-r1);c.stroke();c.restore()}
+  c.restore();
+  ring(R*.55);
+  const tri=(r,ang)=>{c.beginPath();for(let i=0;i<3;i++){const an=ang+i*Math.PI*2/3;c.lineTo(Math.cos(an)*r,Math.sin(an)*r)}c.closePath();c.stroke()};
+  c.save();c.rotate(rot*.25);tri(R*.52,-Math.PI/2);tri(R*.52,Math.PI/2);tri(R*.34,-Math.PI/2);tri(R*.34,Math.PI/2);c.restore();   // interlocking triangles
+  ring(R*.3);
+  c.fillStyle='#ff3030';
+  for(let i=0;i<12;i++){const an=i/12*Math.PI*2+rot*.3;c.beginPath();c.arc(Math.cos(an)*R*.3,Math.sin(an)*R*.3,Math.max(1.5,R*.014),0,7);c.fill()}
+  c.restore();
+  // --- the skull stands upright in the middle ---
+  const pulse=1+.04*Math.sin(e/160),size=Math.min(R*.2,g.ry*1.15)*pulse;
+  drawSkull(c,0,-size*.35,size);
+  // --- red embers rising ---
+  c.shadowBlur=8;c.fillStyle='#ff4020';
+  for(let i=0;i<46;i++){
+    const sd=((i*9301+49297)%233280)/233280,sd2=((i*7919+1237)%233280)/233280;
+    const x=(sd-.5)*R*2.1,life=((e/1700+sd2)%1),y=g.ry*.6-life*g.ry*2.6;
+    c.globalAlpha=a*(1-life)*.9;c.beginPath();c.arc(x,y,1+sd2*2.2,0,7);c.fill()}
+  c.restore();
+}
 function frame(t){
   requestAnimationFrame(frame);
   if(screenId==='lobby')drawPreview('cvLobby',t);
