@@ -89,16 +89,28 @@ class Conn {
 /* ---------------- rooms ---------------- */
 const str = (v, n) => String(v == null ? '' : v).slice(0, n);
 
+const HOST_GRACE_MS = 60000;   // a host whose connection drops has this long to come back before the room closes
+function hsend(r, obj) { if (r.host && r.host.alive) r.host.send(obj); }
+function closeRoom(r) {
+  clearTimeout(r.grace);
+  for (const m of r.members.values()) { m.send({ t: 'closed' }); m.room = null; }
+  rooms.delete(r.code);
+}
+function findRoom(rid) { for (const x of rooms.values()) if (x.rid === rid) return x; return null; }
+
 function leave(c) {
   const r = c.room;
   if (!r) return;
   c.room = null;
   if (c.isHost) {
-    for (const m of r.members.values()) { m.send({ t: 'closed' }); m.room = null; }
-    rooms.delete(r.code);
+    if (c.bye || !r.hostToken) return closeRoom(r);           // the host chose to leave
+    r.host = null;                                           // connection lost: keep the room for a while
+    for (const m of r.members.values()) m.send({ t: 'hostdown' });
+    r.grace = setTimeout(() => closeRoom(r), HOST_GRACE_MS);
   } else {
     r.members.delete(c.id);
-    if (r.host.alive) r.host.send({ t: 'peer', id: c.id, left: true });
+    if (c.token) { const rec = r.tokens.get(c.token); if (rec && rec.conn === c) rec.conn = null; }   // the seat stays reserved
+    hsend(r, { t: 'peer', id: c.id, left: true });
   }
 }
 
@@ -110,14 +122,14 @@ function handle(c, m) {
       if (!CODE_RE.test(code) || rooms.has(code)) return c.send({ t: 'error', msg: 'code-taken' });
       const room = {
         code, rid: crypto.randomBytes(4).toString('hex'), net: m.net === 'local' ? 'local' : 'online',
-        host: c, members: new Map(), open: true,
+        host: c, members: new Map(), open: true, tokens: new Map(), hostToken: crypto.randomBytes(12).toString('hex'), grace: null,
         mode: clampInt(m.mode, 4, 8, 4), deck: str(m.deck, 10), hostName: str(m.name, 12) || 'Host', count: 1, salt: crypto.randomBytes(8).toString('hex'), pw: null
       };
       const pw = str(m.password, 24);
       if (pw) room.pw = hashPw(room.salt, pw);
       rooms.set(code, room);
       c.room = room; c.isHost = true;
-      c.send({ t: 'hosted', id: c.id, code });
+      c.send({ t: 'hosted', id: c.id, code, rid: room.rid, htoken: room.hostToken });
       break;
     }
     case 'update': {
@@ -137,7 +149,7 @@ function handle(c, m) {
       const net = m.net === 'local' ? 'local' : 'online';
       const out = [];
       for (const r of rooms.values()) {
-        if (r.open && r.count < r.mode) {
+        if (r.host && r.open && r.count < r.mode) {
           out.push({ rid: r.rid, hostName: r.hostName, mode: r.mode, deck: r.deck, count: r.count, locked: !!r.pw });
         }
       }
@@ -149,7 +161,7 @@ function handle(c, m) {
       let r = null;
       if (m.code != null) r = rooms.get(str(m.code, 6));
       else if (m.rid != null) for (const x of rooms.values()) if (x.rid === m.rid) r = x;
-      if (!r || !r.open) return c.send({ t: 'error', msg: 'not-found' });
+      if (!r || !r.open || !r.host) return c.send({ t: 'error', msg: 'not-found' });
       if (r.members.size + 1 >= r.mode) return c.send({ t: 'error', msg: 'full' });
       if (r.pw && hashPw(r.salt, str(m.password, 24)) !== r.pw) {
         c.fails = (c.fails || 0) + 1;
@@ -157,10 +169,41 @@ function handle(c, m) {
         return c.send({ t: 'error', msg: 'wrong-password' });
       }
       c.room = r; c.isHost = false; r.members.set(c.id, c);
-      c.send({ t: 'joined', id: c.id });
-      r.host.send({ t: 'peer', id: c.id, joined: true, name: str(m.name, 12) || 'Player', prof: m.prof });
+      const tok = crypto.randomBytes(12).toString('hex'), pid = crypto.randomBytes(5).toString('hex');
+      r.tokens.set(tok, { pid, conn: c }); c.token = tok; c.pid = pid;
+      c.send({ t: 'joined', id: c.id, rid: r.rid, token: tok });
+      hsend(r, { t: 'peer', id: c.id, joined: true, pid, name: str(m.name, 12) || 'Player', prof: m.prof });
       break;
     }
+    case 'check': {      // is my seat still waiting for me?
+      const r = findRoom(str(m.rid, 16)), rec = r && r.tokens.get(str(m.token, 32));
+      c.send({ t: 'sess', ok: !!(r && rec), started: !!(r && !r.open) });
+      break;
+    }
+    case 'rejoin': {     // come back to the same seat after leaving or losing the connection
+      if (c.room) return;
+      const r = findRoom(str(m.rid, 16)), rec = r && r.tokens.get(str(m.token, 32));
+      if (!r || !rec) return c.send({ t: 'error', msg: 'session-gone' });
+      if (!r.host) return c.send({ t: 'error', msg: 'host-away' });
+      if (rec.conn && rec.conn.alive) { const old = rec.conn; leave(old); try { old.socket.destroy(); } catch (e) {} }   // drop a stale connection of the same player
+      c.room = r; c.isHost = false; r.members.set(c.id, c);
+      rec.conn = c; c.token = str(m.token, 32); c.pid = rec.pid;
+      c.send({ t: 'rejoined', id: c.id, rid: r.rid, started: !r.open });
+      hsend(r, { t: 'peer', id: c.id, rejoined: true, pid: rec.pid, name: str(m.name, 12) || 'Player', prof: m.prof });
+      break;
+    }
+    case 'rehost': {     // the host's connection dropped but the host is still playing
+      if (c.room) return;
+      const r = findRoom(str(m.rid, 16));
+      if (!r || r.hostToken !== str(m.token, 32)) return c.send({ t: 'error', msg: 'session-gone' });
+      if (r.host) { const old = r.host; old.room = null; try { old.socket.destroy(); } catch (e) {} }
+      clearTimeout(r.grace);
+      r.host = c; c.room = r; c.isHost = true;
+      c.send({ t: 'rehosted', id: c.id });
+      for (const x of r.members.values()) x.send({ t: 'hostup' });
+      break;
+    }
+    case 'bye': { c.bye = true; break; }
     case 'msg': {
       const r = c.room; if (!r) return;
       if (c.isHost) {
@@ -169,7 +212,7 @@ function handle(c, m) {
         else { const x = r.members.get(m.to); if (x) x.send(pkt); }
       } else {
         const pkt = { t: 'msg', from: c.id, data: m.data };
-        if (m.to == null || m.to === r.host.id) r.host.send(pkt);
+        if (m.to == null || (r.host && m.to === r.host.id)) hsend(r, pkt);
         else { const x = r.members.get(m.to); if (x) x.send(pkt); }   // player to player (voice chat setup)
       }
       break;
@@ -257,7 +300,7 @@ server.on('upgrade', (req, socket) => {
   new Conn(socket);
 });
 // keep connections alive on hosts that close idle sockets
-setInterval(() => { for (const r of rooms.values()) { r.host.sendRaw(0x9, Buffer.alloc(0)); for (const m of r.members.values()) m.sendRaw(0x9, Buffer.alloc(0)); } }, 25000);
+setInterval(() => { for (const r of rooms.values()) { if (r.host) r.host.sendRaw(0x9, Buffer.alloc(0)); for (const m of r.members.values()) m.sendRaw(0x9, Buffer.alloc(0)); } }, 25000);
 
 server.listen(PORT, () => {
   const nets = require('os').networkInterfaces();

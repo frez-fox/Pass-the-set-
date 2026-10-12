@@ -182,6 +182,7 @@ input.txt:focus{border-color:var(--brass)}
         <h1>Pass the Set</h1>
         <p class="note" style="margin:0 0 4px">Four of a kind wins the lap. Last to press SET loses a heart.</p>
         <div class="note" id="netStatus" style="margin:0 0 4px;font-weight:700"></div>
+        <button class="btn pri" id="goRejoin" style="display:none;background:linear-gradient(#4cc38a,#2a8f62);border-color:#4cc38a;color:#06210f">↩ RETURN TO YOUR GAME</button>
         <button class="btn pri" id="goLocal">PLAY LOCAL</button>
         <button class="btn pri" id="goOnline">PLAY ONLINE</button>
         <button class="btn" id="goChar">SETTINGS</button>
@@ -339,6 +340,13 @@ input.txt:focus{border-color:var(--brass)}
     <button class="btn pri wide" id="cfgDone" style="margin-top:8px">Done</button>
   </div></div>
 
+  <div id="leaveModal" class="modal"><div class="sheet">
+    <h3>Leave the room?</h3>
+    <p class="note" id="leaveNote" style="margin:0"></p>
+    <button class="btn pri wide" id="leaveStay">Stay</button>
+    <button class="btn wide" id="leaveGo" style="color:#ff8a98">Leave</button>
+  </div></div>
+
   <div id="menuModal" class="modal"><div class="sheet">
     <h3>Game menu</h3>
     <button class="btn wide" id="mResume">Resume</button>
@@ -428,6 +436,8 @@ const DEF={gear:{x:.087,y:.07,s:.55},chat:{x:.93,y:.07,s:.55},mic:{x:.85,y:.07,s
   look:{x:.92,y:.3,s:1},pass:{x:.854,y:.57,s:1},shuffle:{x:.087,y:.29,s:1},set:{x:.081,y:.49,s:1},eye:{x:.078,y:.73,s:1},swap:{x:.078,y:.73,s:1},
   lset:{x:.9,y:.3,s:1},lcust:{x:.9,y:.46,s:1},lleave:{x:.9,y:.62,s:1},lstart:{x:.5,y:.9,s:1}};
 let eyeCounter=0,EYE_AUD=null;
+let SESSION=store.get('session',null),HSESS=null,reconT=null,reconTry=0;
+if(SESSION&&Date.now()-(SESSION.at||0)>6*3600*1000){SESSION=null;store.set('session',null)}
 let ME=0,NETMODE=null,LOBBY={on:false,isHost:false,online:false,n:4,deck:'CARDS',locked:false,members:[],roles:{eye:0,swap:0,cost:20,scost:30,announce:true}};
 let net='local',role='host',screenId='lobby',G=null,editing=false,editSel='look',genCounter=0,waitTimer=null,searchTimer=null;
 
@@ -543,7 +553,10 @@ function drawPreview(id,t){
 }
 
 /* ================= SCREENS ================= */
+let histArmed=false;
+function armHistory(){if(histArmed)return;histArmed=true;try{history.pushState({pts:1},'')}catch(e){}}
 function show(id){
+  if(id==='game')armHistory();
   screenId=id;$$('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
 }
 $$('[data-back]').forEach(b=>b.onclick=()=>{clearTimers();show(b.dataset.back)});
@@ -553,6 +566,10 @@ function refreshNames(){$('#lobbyName').textContent=profile.name}
 
 $('#goLocal').onclick=()=>{net='local';$('#modeTitle').textContent='Play local';$('#modeNote').textContent='Share a hotspot or Wi-Fi with friends in the same place.';$('#bFind').style.display='none';show('mode')};
 $('#goOnline').onclick=()=>{net='online';$('#modeTitle').textContent='Play online';$('#modeNote').textContent='Host with a private code, join with a code, or find an open server.';$('#bFind').style.display='';show('mode')};
+$('#goRejoin').onclick=()=>{
+  if(!SESSION)return;setStatusMsg('Returning to your game…');
+  netConnect().then(()=>netSend({t:'rejoin',rid:SESSION.rid,token:SESSION.token,name:profile.name,prof:profile})).catch(()=>setStatusMsg('Could not reach the server.'));
+};
 $('#goChar').onclick=()=>{buildChar();show('char')};
 
 $('#bHost').onclick=()=>{role='host';$('#hostTitle').textContent=net==='local'?'Host local game':'Host online game';
@@ -656,7 +673,7 @@ function startGame(room,names,seats){
   G={gen:++genCounter,token:0,n,deck:room.deck,types:setsFor(n),room,names,seats,players:[],lap:0,starter:0,order:[],pos:0,phase:'idle',sel:null,setOrder:[],fly:[],now:0};
   for(let i=0;i<n;i++){const st=seats&&seats[i];
     G.players.push({i,name:names[i],prof:i===0?profile:((st&&st.prof)||randProfile()),hearts:3,points:0,alive:true,hand:[],looking:false,
-      human:i===0,remote:(st&&st.remote)||null,bot:i!==0&&!(st&&st.remote),target:null,newCard:null})}
+      human:i===0,remote:(st&&st.remote)||null,pid:(st&&st.pid)||null,away:false,bot:i!==0&&!(st&&st.remote),target:null,newCard:null})}
   leaveLobbyUI();show('game');stopConfetti();$('#overModal').classList.remove('on');$('#resModal').classList.remove('on');
   $('#feed').innerHTML='';$('#chatLog').innerHTML='';
   G.rc=cleanRoles(room.roles,n);G.eyes=[];assignRoles();
@@ -770,8 +787,9 @@ function botTurn(p){
     const c=alivePlayers().filter(x=>x.i!==p.i);if(c.length)useSwap(p.i,c[rnd(c.length)].i)}
   if(p.role==='eye'&&p.points>=G.rc.cost&&!activeEye(p.i)&&Math.random()<.2){
     const c=alivePlayers().filter(x=>x.i!==p.i);if(c.length)useEye(p.i,c[rnd(c.length)].i)}
-  later(800+Math.random()*700,()=>{p.looking=true;refreshUI();
+  later(800+Math.random()*700,()=>{if(!p.bot)return;p.looking=true;refreshUI();
     later(700+Math.random()*600,()=>{
+      if(!p.bot)return;
       if(G.lap>=1&&hasFour(p.hand)&&Math.random()<.92){chatBot(p,'SET!');callSet(p.i);return}
       if(Math.random()<.12)chatBot(p,CHAT[rnd(CHAT.length)]);
       doPass(p.i,chooseDiscard(p));
@@ -882,7 +900,7 @@ $('#overAgain').onclick=()=>{if(NETMODE==='client')return;const r=G.room,nm=G.na
   if(NETMODE==='host'&&seats)seats.forEach((s,i)=>{if(s.remote)toPeer(s.remote,{k:'start',me:i,n:G.n,deck:G.deck})});
   startGame(r,nm,seats)};
 $('#overLobby').onclick=()=>quit();
-function quit(){SWAPFX.on=false;try{if(SWAP_AUD)SWAP_AUD.pause()}catch(e){}$('#turnTimer').style.display='none';$('#eyeView').classList.remove('on');$('#roleBadge').style.display='none';$('#eyeMenu').classList.remove('on');$('#fxEye').classList.remove('on');stopConfetti();leaveNet();G=null;leaveLobbyUI();LOBBY.members=[];clearTimers();genCounter++;['#overModal','#resModal','#menuModal','#chatPanel'].forEach(s=>$(s).classList.remove('on'));$('#hand').classList.remove('on');setEdit(false);show('lobby');probe()}
+function quit(){if(G&&G.phase==='over')clearSession();SWAPFX.on=false;try{if(SWAP_AUD)SWAP_AUD.pause()}catch(e){}$('#turnTimer').style.display='none';$('#eyeView').classList.remove('on');$('#roleBadge').style.display='none';$('#eyeMenu').classList.remove('on');$('#fxEye').classList.remove('on');stopConfetti();leaveNet();G=null;leaveLobbyUI();LOBBY.members=[];clearTimers();genCounter++;['#overModal','#resModal','#menuModal','#chatPanel'].forEach(s=>$(s).classList.remove('on'));$('#hand').classList.remove('on');setEdit(false);show('lobby');probe()}
 
 /* ---- state sync (host -> players) ---- */
 function snap(fi){
@@ -935,19 +953,61 @@ const netSend=o=>{if(NET.ws&&NET.ws.readyState===1)NET.ws.send(JSON.stringify(o)
 const toPeer=(id,data)=>netSend({t:'msg',to:id,data});
 const toAll=data=>netSend({t:'msg',to:null,data});
 const toHost=data=>netSend({t:'msg',data});
-function leaveNet(){voiceStop();const w=NET.ws;NET.ws=null;NETMODE=null;if(w){try{w.close()}catch(e){}}}
+function leaveNet(){clearReconnect();voiceStop();const w=NET.ws;NET.ws=null;NETMODE=null;HSESS=null;if(w){try{w.send(JSON.stringify({t:'bye'}))}catch(e){}try{w.close()}catch(e){}}}
+/* ---- coming back after leaving by accident or losing the connection ---- */
+function saveSession(rid,token){SESSION={rid,token,at:Date.now(),hostName:''};store.set('session',SESSION)}
+function clearSession(){SESSION=null;store.set('session',null);const b=$('#goRejoin');if(b)b.style.display='none'}
+function showRejoin(on){const b=$('#goRejoin');if(!b)return;b.style.display=(on&&SESSION)?'':'none';
+  if(SESSION)b.textContent=SESSION.hostName?('↩ RETURN TO '+SESSION.hostName.toUpperCase()+"'S GAME"):'↩ RETURN TO YOUR GAME'}
+function setStatusMsg(t){const e=$('#netStatus');if(e){e.textContent=t;e.style.color='#e0a93b'}}
+function clearReconnect(){clearTimeout(reconT);reconT=null;reconTry=0}
+function startReconnect(was){
+  if(reconT)return;reconTry=0;
+  toast('Connection lost. Reconnecting…',60000);
+  const attempt=()=>{
+    if(!(G||LOBBY.on)){reconT=null;return}
+    reconTry++;
+    netConnect().then(()=>{
+      if(was==='host'&&HSESS)netSend({t:'rehost',rid:HSESS.rid,token:HSESS.token});
+      else if(SESSION)netSend({t:'rejoin',rid:SESSION.rid,token:SESSION.token,name:profile.name,prof:profile});
+    }).catch(()=>{});
+    reconT=setTimeout(()=>{
+      if(reconTry>=20){reconT=null;NETMODE=null;toast('Could not reconnect',2500);setTimeout(()=>{if(G||LOBBY.on)quit()},2600)}
+      else attempt();
+    },3000);
+  };
+  attempt();
+}
+function onRejoined(m){
+  NET.id=m.id;NETMODE='client';clearReconnect();voiceLoadIce();
+  if(m.started){
+    if(!G&&!LOBBY.on){show('game');applyLayout();const o=fitCanvas($('#scene'));o.c.fillStyle='#04050a';o.c.fillRect(0,0,o.W,o.H);toast('Returning to your game…',3000)}
+    else toast('Reconnected',1500);
+  }else if(!LOBBY.on)enterClientLobby();else toast('Reconnected',1500);
+}
+function onRehosted(m){
+  NET.id=m.id;NETMODE='host';clearReconnect();toast('Reconnected',1500);
+  if(G)refreshUI();else if(LOBBY.on){const me=LOBBY.members[0];if(me)me.id=NET.id;lobbyBroadcast()}
+}
 function setStatus(ok){const e=$('#netStatus');if(!e)return;e.textContent=ok===null?'Checking server…':ok?'🟢 Server connected: friends can join':'⚪ No server found: bots only. Open this page from your server address.';e.style.color=ok?'#4cc38a':'#9097ab'}
-function probe(){setStatus(null);netConnect().then(()=>setStatus(true)).catch(()=>setStatus(false))}
+function probe(){setStatus(null);netConnect().then(()=>{setStatus(true);if(SESSION)netSend({t:'check',rid:SESSION.rid,token:SESSION.token})}).catch(()=>setStatus(false))}
 function onNetClose(){
   setStatus(false);setTimeout(()=>{if(screenId==='lobby')probe()},2500);
-  const was=NETMODE;NETMODE=null;
+  const was=NETMODE;
   if(!was)return;
+  if((G||LOBBY.on)&&((was==='client'&&SESSION)||(was==='host'&&HSESS))){startReconnect(was);return}
+  NETMODE=null;
   if(G||LOBBY.on){toast('Connection lost',2500);setTimeout(()=>{if(G||LOBBY.on)quit()},2600)}else show('lobby');
 }
 function onNet(m){
   switch(m.t){
-    case 'hosted':NET.id=m.id;voiceLoadIce();enterHostLobby();break;
-    case 'joined':NET.id=m.id;voiceLoadIce();NETMODE='client';enterClientLobby();break;
+    case 'hosted':NET.id=m.id;HSESS={rid:m.rid,token:m.htoken};voiceLoadIce();enterHostLobby();break;
+    case 'joined':NET.id=m.id;saveSession(m.rid,m.token);voiceLoadIce();NETMODE='client';enterClientLobby();break;
+    case 'rejoined':onRejoined(m);break;
+    case 'rehosted':onRehosted(m);break;
+    case 'sess':if(m.ok)showRejoin(true);else clearSession();break;
+    case 'hostdown':if(NETMODE==='client')toast('Host connection lost. Waiting for the host…',4000);break;
+    case 'hostup':if(NETMODE==='client')toast('The host is back',2000);break;
     case 'rooms':showRooms(m.rooms||[]);break;
     case 'error':netError(m.msg);break;
     case 'closed':hostGone();break;
@@ -957,6 +1017,12 @@ function onNet(m){
   }
 }
 function netError(msg){
+  if(msg==='session-gone'||msg==='host-away'){
+    if(reconT||G||LOBBY.on){
+      if(msg==='host-away')return;                       // keep trying while the host is away
+      clearReconnect();NETMODE=null;clearSession();toast('That room is gone',2500);setTimeout(()=>{if(G||LOBBY.on)quit()},2600);return}
+    if(msg==='session-gone'){clearSession();setStatusMsg('That game has ended.')}else setStatusMsg('The host is away. Try again in a moment.');
+    return}
   if(msg==='code-taken'){HOSTCODE=genCode();$('#codeText').textContent=HOSTCODE;$('#hostStart').click();return}
   if(msg==='wrong-password'&&screenId==='search'){
     $('#searchMsg').textContent='Wrong password. Refreshing the list…';$('#searchSpin').style.display='';$('#searchList').innerHTML='';
@@ -966,6 +1032,7 @@ function netError(msg){
 }
 function hostGone(){
   if(NETMODE!=='client')return;
+  clearSession();
   if(G||LOBBY.on){toast('The host left the room',2500);setTimeout(()=>{if(G||LOBBY.on)quit()},2600)}else{leaveNet();show('lobby')}
 }
 function showRooms(list){
@@ -982,7 +1049,7 @@ function joinRoom(target){netSend({t:'join',...target,name:profile.name,prof:pro
 /* ---- bar lobby ---- */
 const LBTN=['bLSet','bLCust','bLLeave','bLStart'];
 let LSTAB='settings';
-function sanMember(m){return {id:m.id==null?null:(+m.id),name:String(m.name||'Player').slice(0,12),prof:cleanProf(m.prof),host:!!m.host,bot:!!m.bot}}
+function sanMember(m){return {pid:m.pid||null,id:m.id==null?null:(+m.id),name:String(m.name||'Player').slice(0,12),prof:cleanProf(m.prof),host:!!m.host,bot:!!m.bot}}
 function enterLobbyScreen(){
   G=null;clearTimers();show('game');applyLayout();
   $('#feed').innerHTML='';$('#chatLog').innerHTML='';$('#hand').classList.remove('on');
@@ -1038,9 +1105,20 @@ function openPracticeLobby(){
 function onPeer(m){
   if(m.joined){
     if(G||!LOBBY.on||!LOBBY.isHost||LOBBY.members.length>=LOBBY.n)return;
-    const nm=sanMember({id:m.id,name:m.name,prof:m.prof});
+    const nm=sanMember({id:m.id,name:m.name,prof:m.prof,pid:m.pid});
     LOBBY.members.push(nm);chatAll('Bar',`${nm.name} joined the bar`);lobbyBroadcast();
     if(LOBBY.members.length>=LOBBY.n){chatAll('Bar','Room is full, starting…');setTimeout(()=>beginNetGame(true),1800)}
+  }else if(m.rejoined){
+    if(G){
+      const p=G.players.find(x=>x.pid&&x.pid===m.pid);
+      if(!p){toPeer(m.id,{k:'lost'});return}
+      p.remote=m.id;p.bot=false;p.away=false;p.looking=false;
+      if(G.seats&&G.seats[p.i])G.seats[p.i].remote=m.id;
+      chatAll(p.name,'is back in the game');
+      toPeer(m.id,{k:'start',me:p.i,n:G.n,deck:G.deck});
+      refreshUI();rejoinTurn(p);
+    }else if(LOBBY.on&&LOBBY.isHost){onPeer({joined:true,id:m.id,pid:m.pid,name:m.name,prof:m.prof})}
+    else toPeer(m.id,{k:'lost'});
   }else if(m.left){
     if(G){peerLeft(m.id);return}
     const i=LOBBY.members.findIndex(x=>x.id===m.id);
@@ -1052,7 +1130,7 @@ function beginNetGame(auto){
   if(auto&&LOBBY.members.length<LOBBY.n)return;
   const n=LOBBY.n,names=[],seats=[];
   if(NETMODE==='host')netSend({t:'start'});
-  LOBBY.members.forEach((m,i)=>{names.push(m.name);seats.push({remote:(i>0&&!m.bot&&m.id!=null)?m.id:null,prof:m.prof})});
+  LOBBY.members.forEach((m,i)=>{names.push(m.name);seats.push({remote:(i>0&&!m.bot&&m.id!=null)?m.id:null,prof:m.prof,pid:m.pid||null})});
   const pool=shuffle(BOTNAMES.filter(b=>!names.includes(b)));
   while(names.length<n){names.push(pool.pop());seats.push({remote:null,prof:null})}
   seats.forEach((s,i)=>{if(s.remote)toPeer(s.remote,{k:'start',me:i,n,deck:LOBBY.deck})});
@@ -1118,7 +1196,7 @@ function lobbyProfileChanged(){
 $('#charBack').onclick=()=>{if(LOBBY.on){show('game');lobbyProfileChanged()}else show('lobby')};
 $('#ltabs').onclick=e=>{const b=e.target.closest('button');if(b){LSTAB=b.dataset.t;buildLset()}};
 $('#lClose').onclick=()=>$('#lset').classList.remove('on');
-$('#lLeave').onclick=()=>{$('#lset').classList.remove('on');quit()};
+$('#lLeave').onclick=()=>{$('#lset').classList.remove('on');openLeaveConfirm()};
 $('#lset').onclick=e=>{if(e.target.id==='lset')$('#lset').classList.remove('on')};
 
 /* ---- bar lobby scene ---- */
@@ -1194,7 +1272,9 @@ function drawLobbyScene(t){
 function onHostMsg(d){
   switch(d.k){
     case 'lobby':if(!LOBBY.on)break;LOBBY.n=d.n|0;LOBBY.deck=DECKS[d.deck]?d.deck:'CARDS';LOBBY.locked=!!d.locked;LOBBY.online=!!d.online;LOBBY.roles=cleanRoles(d.roles,LOBBY.n);
-      LOBBY.members=(d.members||[]).slice(0,8).map(sanMember);refreshLobbyUI();voiceSync();if($('#lset').classList.contains('on'))buildLset();break;
+      LOBBY.members=(d.members||[]).slice(0,8).map(sanMember);
+      {const h=LOBBY.members.find(x=>x.host);if(h&&SESSION&&SESSION.hostName!==h.name){SESSION.hostName=h.name;store.set('session',SESSION)}}
+      refreshLobbyUI();voiceSync();if($('#lset').classList.contains('on'))buildLset();break;
     case 'start':ME=d.me|0;G=null;leaveLobbyUI();stopConfetti();$('#overModal').classList.remove('on');$('#resModal').classList.remove('on');break;
     case 'state':if(d.s&&d.s.players&&DECKS[d.s.deck])applyState(d.s);break;
     case 'toast':toast(String(d.msg),d.ms|0||1800);break;
@@ -1202,6 +1282,7 @@ function onHostMsg(d){
     case 'sfx':if(SFX[d.n])SFX[d.n]();break;
     case 'fx':if(d.a==='eye'){playEyeFx();if(!d.own)toast('👁 A Third-EYE was used',2200)}
       else if(d.a==='swap'){playSwapFx();if(!d.own)toast(d.tg?'🔄 Your cards were switched!':'🔄 A Switch was used',2600)}break;
+    case 'lost':toast('Your seat is no longer available',2500);clearSession();setTimeout(()=>quit(),2600);break;
     case 'result':if(G)showResult(d.d);break;
     case 'over':if(G)showOver(d.d);break;
   }
@@ -1228,10 +1309,21 @@ function onPeerMsg(from,d){
     case 'shuffle':if(p.alive&&G.phase==='pass'&&(p.same||0)>=5)doShuffle(p.i);break;
   }
 }
+// a player came back during their own turn: give them a fresh turn timer
+function rejoinTurn(p){
+  if(G.phase!=='pass'||G.order[G.pos]!==p.i)return;
+  p.looking=true;G.turnEnd=Date.now()+TURN_MS;const L=G.lap,P=G.pos;
+  later(TURN_MS,()=>{
+    if(G.phase!=='pass'||G.lap!==L||G.pos!==P||G.order[G.pos]!==p.i)return;
+    if(p.remote)toPeer(p.remote,{k:'toast',msg:'Time is up. A card was passed for you.',ms:2200});
+    doPass(p.i,leastCard(p));
+  });
+  refreshUI();
+}
 function peerLeft(id){
   const p=G.players.find(x=>x.remote===id);if(!p)return;
-  p.remote=null;p.bot=true;if(G.seats&&G.seats[p.i])G.seats[p.i].remote=null;
-  chatAll(p.name,'left the game. A bot takes over.');
+  p.remote=null;p.bot=true;p.away=true;if(G.seats&&G.seats[p.i])G.seats[p.i].remote=null;
+  chatAll(p.name,'left. A bot plays until they come back.');
   if(!p.alive)return;
   if(G.phase==='pass'&&G.order[G.pos]===p.i)botTurn(p);
   else if(G.phase==='set'&&!G.setOrder.includes(p.i))later(600+Math.random()*1500,()=>pressSet(p.i));
@@ -1240,7 +1332,7 @@ function peerLeft(id){
 
 /* ================= VOICE CHAT (WebRTC, signaling through the room server) ================= */
 const VOICE={pcs:new Map(),audios:new Map(),pend:new Map(),stream:null,track:null,target:'off',muted:new Set(),allMuted:false,ice:null};
-try{window.__voice=VOICE;window.__game=()=>G}catch(e){}
+try{window.__voice=VOICE;window.__game=()=>G;window.__net=NET}catch(e){}
 const STUN=[{urls:'stun:stun.l.google.com:19302'}];
 const cidOf=p=>p.cid!==undefined?p.cid:(p.human?NET.id:(p.remote||null));
 function voiceLoadIce(){fetch('/ice').then(r=>r.json()).then(j=>{VOICE.ice=j}).catch(()=>{VOICE.ice=STUN})}
@@ -1454,12 +1546,23 @@ $('#bSwap').onclick=act(()=>openTargetMenu('swap'));
 document.addEventListener('pointerdown',e=>{const m=$('#eyeMenu');if(m.classList.contains('on')&&!m.contains(e.target)&&!e.target.closest('#bEye,#bSwap'))m.classList.remove('on')});
 $('#bLSet').onclick=act(()=>openLset());
 $('#bLCust').onclick=act(()=>{buildChar();show('char')});
-$('#bLLeave').onclick=act(()=>quit());
+$('#bLLeave').onclick=act(()=>openLeaveConfirm());
 $('#bLStart').onclick=act(()=>{if(LOBBY.isHost)beginNetGame()});
 $('#bMic').onclick=act(()=>openVoiceMenu('mic'));
 $('#bSpk').onclick=act(()=>openVoiceMenu('spk'));
 $('#mResume').onclick=()=>$('#menuModal').classList.remove('on');
-$('#mQuit').onclick=()=>{$('#menuModal').classList.remove('on');quit()};
+$('#mQuit').onclick=()=>{$('#menuModal').classList.remove('on');openLeaveConfirm()};
+function openLeaveConfirm(){
+  let note;
+  if(NETMODE==='host')note='You are the host. If you leave, the room closes for everyone.';
+  else if(NETMODE==='client')note=G?'A bot will play for you. You can come back from the main menu while the game is still running.':'You will leave the bar. You can come back from the main menu until the game starts.';
+  else note='This practice game will end.';
+  $('#leaveNote').textContent=note;$('#leaveModal').classList.add('on');
+}
+$('#leaveStay').onclick=()=>$('#leaveModal').classList.remove('on');
+$('#leaveGo').onclick=()=>{$('#leaveModal').classList.remove('on');quit()};
+window.addEventListener('popstate',()=>{if(LOBBY.on||G){try{history.pushState({pts:1},'')}catch(e){}openLeaveConfirm()}});
+window.addEventListener('beforeunload',e=>{if(NETMODE&&(LOBBY.on||G)){e.preventDefault();e.returnValue=''}});
 function soundLabel(){$('#mSound').textContent='Sound: '+(soundOn?'on':'off')}
 $('#mSound').onclick=()=>{soundOn=!soundOn;store.set('sound',soundOn);soundLabel();if(soundOn)SFX.pick()};
 soundLabel();
